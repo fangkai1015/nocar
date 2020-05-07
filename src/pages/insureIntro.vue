@@ -10,8 +10,13 @@
                     <ul>
                         <li v-for="dataItem in enableDate" :key="dataItem.id" class="insureList">
                             <div v-if="dataItem.displayType == 'datesel' ">
-                              <van-cell class="insureDate-line"  :title=dataItem.showName :value= insureDate  @click="show = true" is-link/>
-                              <van-calendar v-model="show"  @confirm="onConfirm" :min-date="minDate"/>
+                              <van-cell class="insureDate-line"  :value="insureDate"  @click="show = true" is-link>
+                                  <template #title>
+                                    <div class="insureIntro-label">{{dataItem.showName}}</div>
+                                    <span class="required-icon" v-if="dataItem.required">*</span>
+                                  </template>
+                              </van-cell>
+                              <van-calendar v-model="show"  @confirm="onConfirm" :min-date="minDate" :max-date="maxDate"/>
                             </div>
                         </li>
 
@@ -24,23 +29,32 @@
                 <div class="insureIntro-title">投保人信息</div>
                 <div class="insureIntro-item">
                     <ul>
-                        <li v-for="(insurerItem,i) in insurer"  :key="insurerItem.id" class="insureList">
+                        <li v-for="insurerItem in insurer"  :key="insurerItem.id" class="insureList">
                             <div v-if="insurerItem.displayType != 'datesel' && insurerItem.displayType != 'profCheck'"  class="insureIntro-label">{{insurerItem.showName}}</div>
-                            <van-cell is-link @click="showPopup2" v-if="insurerItem.displayType == 'profCheck'" :value="jobValue2" :title="insurerItem.showName" />
+                            <span class="required1-icon" v-if="insurerItem.displayType != 'datesel' && insurerItem.displayType != 'profCheck' && insurerItem.required">*</span>
+                            <van-cell is-link @click="showPopup2" v-if="insurerItem.displayType == 'profCheck'" :value="jobValue2">
+                              <template #title>
+                                <div class="insureIntro-label">{{insurerItem.showName}}</div>
+                                <span class="required-icon" v-if="insurerItem.required">*</span>
+                              </template>
+                            </van-cell>
                             <div  v-if="insurerItem.displayType == 'input' "  class="insureIntro-right">
-                                <input type="text" class="insureIntro-input"  :placeholder= " '请输入'+insurerItem.showName" v-blur  v-model.trim="insurerItem.value">
+                                <input type="text" class="insureIntro-input"  :placeholder= " '请输入'+insurerItem.showName" v-blur  v-model.trim="insurerItem.value" v-if="insurerItem.fieldName == 'insCredentials'" @blur="setIntro(insurer)">
+                                <input type="text" class="insureIntro-input"  :placeholder= " '请输入'+insurerItem.showName" v-blur  v-model.trim="insurerItem.value" v-if="insurerItem.fieldName !== 'insCredentials'">
                             </div>
                             <div  v-else-if="insurerItem.displayType == 'select'"  class="insureIntro-right">
-                                <select  class="insureIntro-select" v-if="insurerItem.fieldName == 'insProvince' && insurerItem.validateRules"  v-model="insurerItem.value" @change="changeProvince(insurerItem.validateRules,insurerItem.value)">
+                                <select  class="insureIntro-select" v-if="insurerItem.fieldName == 'insProvince' && insurerItem.validateRules"  v-model="insurerItem.value" @change="changeProvince(insurerItem.validateRules,insurerItem.value,insurerItem.fldgroup)">
+                                    <option style="display:none"></option>
                                     <option :value="selectItem.value"  v-for="selectItem in JSON.parse(insurerItem.validateRules).valueLimit" :key="selectItem.value">{{selectItem.name}}</option>
                                 </select>
-                                <select class="insureIntro-select"  v-else-if="insurerItem.fieldName == 'insCity'"  v-model="insurerItem.value"  >
-                                  <option :value="selectItem.value"  v-for="selectItem in insCitys" :key="selectItem.value">{{selectItem.name}}</option>
+                                <select class="insureIntro-select"  v-else-if="insurerItem.fieldName == 'insCity'"  v-model="insurerItem.value">
+                                  <option style="display:none"></option>
+                                  <option :value="selectItem.value"  v-for="selectItem in Citys" :key="selectItem.value">{{selectItem.name}}</option>
                                 </select>
-                                <select  class="insureIntro-select" v-else-if="insurerItem.fieldName != 'insProvince' && insurerItem.fieldName != 'insCity' && insurerItem.validateRules" v-model="insurerItem.value" >
+                                <select  class="insureIntro-select" v-else-if="insurerItem.fieldName != 'insProvince' && insurerItem.fieldName != 'insCity' && insurerItem.validateRules" v-model="insurerItem.value">
+                                    <option style="display:none"></option>
                                     <option :value="selectItem.value"  v-for="selectItem in JSON.parse(insurerItem.validateRules).valueLimit" :key="selectItem.value">{{selectItem.name}}</option>
                                 </select>
-
                             </div>
                             <div  v-else-if="insurerItem.displayType == 'singlecheck' && insurerItem.validateRules "  class="insureIntro-right">
                               <van-radio-group v-model="insurerItem.value" direction="horizontal">
@@ -50,9 +64,14 @@
                             <div  v-else-if="insurerItem.displayType == 'multicheck'"  class="insureIntro-right">
                             </div>
                             <div v-else-if="insurerItem.displayType == 'datesel'" >
-                                 <van-cell :title="insurerItem.showName"    :value="insureBirthDate"  is-link  @click="insureBirthPop = true" />
+                                 <van-cell :value="insureBirthDate"  is-link  @click="insureBirthPop = true">
+                                   <template #title>
+                                    <div class="insureIntro-label">{{insurerItem.showName}}</div>
+                                    <span class="required-icon" v-if="insurerItem.required">*</span>
+                                  </template>
+                                 </van-cell>
                                  <van-popup v-model="insureBirthPop" :label="insurerItem.showName" position="bottom" :overlay="true">
-                                      <van-datetime-picker  type="date"   @cancel="insureBirthPop = false" @confirm="confirmInsureBirthDate"   :min-date="minBirthDate"  :max-date="maxBirthDate" />
+                                      <van-datetime-picker  type="date"   @cancel="insureBirthPop = false" @confirm="confirmInsureBirthDate"   :min-date="minBirthDate"  :max-date="maxBirthDate"/>
                                   </van-popup>
                             </div>
 
@@ -73,34 +92,69 @@
                         <span>父母</span>
                         <span>子女</span>
                     </div> -->
-                    <div class="toubao-con" >
+                    <div class="toubao-con">
                         <div class="insureIntro-item">
                             <ul>
-                                <li v-for="insuredItem in insured" :key="insuredItem.id" class="insureList">
+                              <li v-for="insuredItem in insured.slice(0,1)" :key="insuredItem.id" class="insureList">
+                                  <div class="insureIntro-label" >{{insuredItem.showName}}</div>
+                                  <span class="required1-icon" v-if="insuredItem.required">*</span>
+                                  <div  v-if="insuredItem.displayType == 'select'"  class="insureIntro-right">
+                                      <select class="insureIntro-select" v-if="insuredItem.fieldName == 'relation'"  v-model="insuredItem.value" @change="insuredchange(insuredItem.value)">
+                                          <option style="display:none"></option>
+                                          <option :value="selectItem.value"  v-for="selectItem in JSON.parse(insuredItem.validateRules).valueLimit" :key="selectItem.value">{{selectItem.name}}</option>
+                                      </select>
+                                  </div>
+                              </li>
+                              <template v-if="insuredShow">
+                                <li v-for="insuredItem in insured.slice(1)" :key="insuredItem.id" class="insureList">
                                     <div v-if="insuredItem.displayType != 'datesel' && insuredItem.displayType != 'profCheck'" class="insureIntro-label" >{{insuredItem.showName}}</div>
-                                    <van-cell is-link @click="showPopup1" v-if="insuredItem.displayType == 'profCheck'" :value="jobValue1" :title="insuredItem.showName" />
+                                    <span class="required1-icon" v-if="insuredItem.displayType != 'datesel' && insuredItem.displayType != 'profCheck' && insuredItem.required">*</span>
                                     <div  v-if="insuredItem.displayType == 'input' "  class="insureIntro-right">
-                                        <input type="text" class="insureIntro-input"  :placeholder= " '请输入'+insuredItem.showName" v-blur  v-model.trim="insuredItem.value">
+                                        <input type="text" class="insureIntro-input"  :placeholder= " '请输入'+insuredItem.showName" v-blur  v-model.trim="insuredItem.value" v-if="insuredItem.fieldName == 'certificateContent'" @blur="setIntro(insured)">
+                                        <input type="text" class="insureIntro-input"  :placeholder= " '请输入'+insuredItem.showName" v-blur  v-model.trim="insuredItem.value" v-if="insuredItem.fieldName !== 'certificateContent'" v-show="insuredShow">
                                     </div>
                                     <div  v-else-if="insuredItem.displayType == 'select'"  class="insureIntro-right">
-                                        <select class="insureIntro-select" v-if="insuredItem.validateRules"  v-model="insuredItem.value">
-                                            <option :value="selectItem.value"  v-for="selectItem in JSON.parse(insuredItem.validateRules).valueLimit" :key="selectItem.value">{{selectItem.name}}</option>
-                                        </select>
+                                      <select  class="insureIntro-select" v-if="insuredItem.fieldName == 'province' && insuredItem.validateRules"  v-model="insuredItem.value" @change="changeProvince(insuredItem.validateRules,insuredItem.value,insuredItem.fldgroup)">
+                                        <option style="display:none"></option>
+                                        <option :value="selectItem.value"  v-for="selectItem in JSON.parse(insuredItem.validateRules).valueLimit" :key="selectItem.value">{{selectItem.name}}</option>
+                                      </select>
+                                      <select class="insureIntro-select"  v-else-if="insuredItem.fieldName == 'city'"  v-model="insuredItem.value">
+                                        <option style="display:none"></option>
+                                        <option :value="selectItem.value"  v-for="selectItem in insCitys" :key="selectItem.value">{{selectItem.name}}</option>
+                                      </select>
+                                      <select class="insureIntro-select" v-else-if="insuredItem.fieldName !== 'province' && insuredItem.fieldName !== 'city'  && insuredItem.fieldName !== 'relation' && insuredItem.validateRules"  v-model="insuredItem.value" ref="selectBox">
+                                          <option style="display:none"></option>
+                                          <option :value="selectItem.value"  v-for="selectItem in JSON.parse(insuredItem.validateRules).valueLimit" :key="selectItem.value">{{selectItem.name}}</option>
+                                      </select>
                                     </div>
                                     <div  v-else-if="insuredItem.displayType == 'singlecheck' && insuredItem.validateRules "  class="insureIntro-right">
                                         <van-radio-group  v-model="insuredItem.value"  direction="horizontal">
-                                            <van-radio :name="singleItem.name" v-for="singleItem in JSON.parse(insuredItem.validateRules).valueLimit" :key="singleItem.value">{{singleItem.name}}</van-radio>
+                                            <van-radio :name="singleItem.value" v-for="singleItem in JSON.parse(insuredItem.validateRules).valueLimit" :key="singleItem.value">{{singleItem.name}}</van-radio>
                                         </van-radio-group>
                                     </div>
                                     <div  v-else-if="insuredItem.displayType == 'multicheck'"  class="insureIntro-right">
                                     </div>
                                     <div v-else-if="insuredItem.displayType == 'datesel'" >
-                                         <van-cell :title="insuredItem.showName"   :value="insuredBirthDate" is-link  @click="insuredBirthPop = true" />
+                                         <van-cell :value="insuredBirthDate" is-link  @click="insuredBirthPop = true">
+                                            <template #title>
+                                              <div class="insureIntro-label">{{insuredItem.showName}}</div>
+                                              <span class="required-icon" v-if="insuredItem.required">*</span>
+                                            </template>
+                                         </van-cell>
                                          <van-popup v-model="insuredBirthPop" :label="insuredItem.showName" position="bottom" :overlay="true">
                                               <van-datetime-picker  type="date" @cancel="insuredBirthPop = false" @confirm="confirmInsuredBirthDate"  :min-date="minBirthDate" :max-date="maxBirthDate"/>
                                           </van-popup>
                                     </div>
                                 </li>
+                              </template>
+                              <li v-if="JSON.stringify(profession) !== '{}'" class="insureList">
+                                  <van-cell is-link @click="showPopup1" :value="jobValue1" :title="profession.showName">
+                                    <template #title>
+                                      <div class="insureIntro-label">{{profession.showName}}</div>
+                                      <span class="required-icon" v-if="profession.required">*</span>
+                                    </template>
+                                  </van-cell>                                 
+                              </li>
                             </ul>
                         </div>
                     </div>
@@ -149,8 +203,7 @@
 
             <!--受益人信息-->
             <div class="insureIntro-box"  v-if="beneficiary">
-                <div class="insureIntro-title">受益人信息<span class="insureIntro-t1">(若有多个受益人，默认平分保额)</span></div>
-                <div class="syr-tips">不填写，默认为法定受益人</div>
+                <div class="insureIntro-title">受益人信息</div>
             <!--   <div class="people-tab">
                         <span class="on">父母</span>
                         <span>配偶</span>
@@ -161,11 +214,13 @@
                             <ul>
                                 <li v-for="beneficiaryItem in beneficiary" :key="beneficiaryItem.id" class="insureList">
                                     <div class="insureIntro-label">{{beneficiaryItem.showName}}</div>
+                                    <span class="required1-icon" v-if="beneficiaryItem.required">*</span>
                                     <div  v-if="beneficiaryItem.displayType == 'input' "  class="insureIntro-right">
                                         <input type="text" class="insureIntro-input"  :placeholder= " '请输入'+beneficiaryItem.showName" v-model.trim="beneficiaryItem.value"  v-blur>
                                     </div>
                                     <div  v-else-if="beneficiaryItem.displayType == 'select'"  class="insureIntro-right">
                                         <select class="insureIntro-select" v-if="beneficiaryItem.validateRules"  v-model="beneficiaryItem.value">
+                                            <option style="display:none"></option>
                                             <option :value="selectItem.value"  v-for="selectItem in JSON.parse(beneficiaryItem.validateRules).valueLimit" :key="selectItem.value">{{selectItem.name}}</option>
                                         </select>
                                     </div>
@@ -174,7 +229,7 @@
                                     </div>
                                     <div  v-else-if="beneficiaryItem.displayType == 'singlecheck' && beneficiaryItem.validateRules "  class="insureIntro-right">
                                         <van-radio-group  v-model="beneficiaryItem.value"  direction="horizontal">
-                                            <van-radio :name="singleItem.name" v-for="singleItem in JSON.parse(beneficiaryItem.validateRules).valueLimit" :key="singleItem.value">{{singleItem.name}}</van-radio>
+                                            <van-radio :name="singleItem.value" v-for="singleItem in JSON.parse(beneficiaryItem.validateRules).valueLimit" :key="singleItem.value">{{singleItem.name}}</van-radio>
                                         </van-radio-group>
                                     </div>
                                     <div  v-else-if="beneficiaryItem.displayType == 'multicheck'"  class="insureIntro-right">
@@ -195,17 +250,19 @@
                     <ul>
                         <li v-for="emergencyItem in emergency" :key="emergencyItem.id" class="insureList">
                             <div class="insureIntro-label">{{emergencyItem.showName}}</div>
+                            <span class="required1-icon" v-if="emergencyItem.required">*</span>
                             <div  v-if="emergencyItem.displayType == 'input' "  class="insureIntro-right">
                                 <input type="text" class="insureIntro-input"  :placeholder= " '请输入'+emergencyItem.showName" v-blur  v-model.trim="emergencyItem.value" >
                             </div>
                             <div  v-else-if="emergencyItem.displayType == 'select'"  class="insureIntro-right">
                                 <select class="insureIntro-select" v-if="emergencyItem.validateRules" v-model="emergencyItem.value">
+                                    <option style="display:none"></option>
                                     <option :value="selectItem.value"  v-for="selectItem in JSON.parse(emergencyItem.validateRules).valueLimit" :key="selectItem.value">{{selectItem.name}}</option>
                                 </select>
                             </div>
                             <div  v-else-if="emergencyItem.displayType == 'singlecheck' && emergencyItem.validateRules "  class="insureIntro-right">
                                 <van-radio-group  v-model="emergencyItem.value"  direction="horizontal">
-                                    <van-radio :name="singleItem.name" v-for="singleItem in JSON.parse(emergencyItem.validateRules).valueLimit" :key="singleItem.value">{{singleItem.name}}</van-radio>
+                                    <van-radio :name="singleItem.value" v-for="singleItem in JSON.parse(emergencyItem.validateRules).valueLimit" :key="singleItem.value">{{singleItem.name}}</van-radio>
                                 </van-radio-group>
                             </div>
                             <div  v-else-if="beneficiaryItem.displayType == 'multicheck'"  class="insureIntro-right">
@@ -223,17 +280,19 @@
                   <ul>
                       <li v-for="otherInfoItem in otherInfo" :key="otherInfoItem.id" class="insureList">
                           <div class="insureIntro-label">{{otherInfoItem.showName}}</div>
+                          <span class="required1-icon" v-if="otherInfoItem.required">*</span>
                           <div  v-if="otherInfoItem.displayType == 'input' "  class="insureIntro-right">
                               <input type="text" class="insureIntro-input"  :placeholder= " '请输入'+otherInfoItem.showName" v-blur  v-model.trim="otherInfoItem.value" >
                           </div>
                           <div  v-else-if="otherInfoItem.displayType == 'select'"  class="insureIntro-right">
                               <select class="insureIntro-select" v-if="otherInfoItem.validateRules" v-model="otherInfoItem.value">
+                                  <option style="display:none"></option>
                                   <option :value="selectItem.value"  v-for="selectItem in JSON.parse(otherInfoItem.validateRules).valueLimit" :key="selectItem.value">{{selectItem.name}}</option>
                               </select>
                           </div>
                           <div  v-else-if="otherInfoItem.displayType == 'singlecheck' && otherInfoItem.validateRules "  class="insureIntro-right">
                               <van-radio-group  v-model="otherInfoItem.value"  direction="horizontal">
-                                  <van-radio :name="singleItem.name" v-for="singleItem in JSON.parse(otherInfoItem.validateRules).valueLimit" :key="singleItem.value">{{singleItem.name}}</van-radio>
+                                  <van-radio :name="singleItem.value" v-for="singleItem in JSON.parse(otherInfoItem.validateRules).valueLimit" :key="singleItem.value">{{singleItem.name}}</van-radio>
                               </van-radio-group>
                           </div>
                           <div  v-else-if="beneficiaryItem.displayType == 'multicheck'"  class="insureIntro-right">
@@ -244,6 +303,7 @@
                   </ul>
                 </div>
              </div>
+            <div class="syr-intro" v-if="!beneficiary">受益人默认为法定受益人</div>      
         </div>
         <footer class="detail-footer intro-footer">
             <div class="footer-content">
@@ -391,7 +451,8 @@ export default {
       profLists:[],//职业前二级
       insureDate: '',
       show: false,
-      minDate: new Date( new Date().getFullYear(),new Date().getMonth(),new Date().getDate()+1),
+      minDate:new Date( new Date().getFullYear(),new Date().getMonth(),new Date().getDate() + 1),
+      maxDate:new Date( new Date().getFullYear(),new Date().getMonth(),new Date().getDate() + 30),
       insureBirthPop:false,
       insureBirthDate:'',
       insuredBirthDate:'',
@@ -410,6 +471,7 @@ export default {
       jobValue2:'',
       profCode1:'',
       profCode2:'',
+      Citys:[],
       insCitys:[],
       jobCon1:true,
       searchCon1:false,
@@ -418,13 +480,19 @@ export default {
       jobCon2:true,
       searchCon2:false,
       searchEmpty2:false,
-      searchList2:[]
+      searchList2:[],
+      insuredShow:true,
+      profession:{}//被保人职业字段
     }
   },
   components:{
         'headerbox': headerbox
    },
   methods:{
+    //初始化select的index
+    selectIndex(){
+          
+    },
     formatDate(date) {
       return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
     },
@@ -484,12 +552,69 @@ export default {
         this.searchCon2 = true;
       }
     },
+    //投保人被保人身份证号失去焦点
+    setIntro(val){
+      let idCard,valCard;
+      let cardType1 = false,cardType2 = false;
+      let cardReg = /^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$|^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{2}$/;
+      val.map((data,i)=>{
+        let fieldName = data.fieldName;
+        if(fieldName == 'insCredentialsType'){
+          if(data.value && data.value == '01'){
+            cardType1 = true;
+          }
+        }
+        if(fieldName == 'certificateType'){
+          if(data.value && data.value == '01'){
+            cardType2 = true;
+          }
+        }
+        if(fieldName == 'insCredentials' && cardType1){//投保人身份证号码带出出生日期
+          if(data.value && cardReg.test(data.value)){
+              idCard = data.value
+              this.insureBirthDate = this.getCard(idCard);
+          }
+        }
+        
+        if(fieldName == 'certificateContent' && cardType2){//被保人身份证号码带出出生日期
+          if(data.value && cardReg.test(data.value)){
+              valCard = data.value
+              this.insuredBirthDate = this.getCard(valCard);
+          }
+        }
+        if(fieldName == 'insSex' && cardType1){//投保人身份证号码带出性别
+          if(idCard && cardReg.test(idCard)){
+            let sexVal = this.getSex(idCard);
+            data.value = sexVal == '男'?'1':'2';
+          }
+        }
+        if(fieldName == 'sex' && cardType2){//被保人身份证号码带出性别
+          if(valCard && cardReg.test(valCard)){
+            let sexVal = this.getSex(valCard);
+            data.value = sexVal == '男'?'1':'2';
+          }
+        }
+      })
+    },
+    //被保人选择本人
+    insuredchange(index){
+      if(index == '01'){
+       this.insuredShow = false
+      }else{
+        this.insuredShow = true;
+      }
+    },
     searchEnter(num,work){
+      let codeDateType = '';
+      if(JSON.stringify(this.profession) !== '{}' && this.profession.validateRules !== ''){
+        codeDateType = JSON.parse(this.profession.validateRules).profLimit;
+      }
       this.$ajax({
             method:'post',
             url:'/insurance/api/insure/findProfessionByInsIdAndName/' + this.$route.query.id,
             params:{
-              'profName':work
+              'profName':work,
+              'codeDateType':codeDateType
             }
           })
           .then((res)=>{
@@ -534,23 +659,53 @@ export default {
             if(res.data &&  res.data.code == "1"){
               //被保日期
               this.enableDate = res.data.outData.enableDate;
-              //被保人
-              this.insured =  res.data.outData.insured;
               //投保人
               this.insurer =  res.data.outData.insurer;
               //受益人
               this.beneficiary = res.data.outData.beneficiary;
               //紧急信息
               this.emergency = res.data.outData.emergency;
+              
               //其它信息
               if(res.data.outData.otherInfo){
                 this.otherInfo = res.data.outData.otherInfo;
               }
+              let ableDate = res.data.outData.enableDate
+              if(ableDate[0].validateRules !== ''){
+                let allDate = JSON.parse(ableDate[0].validateRules).dateLimit;
+                let minNum = parseInt(allDate[0]);
+                let maxNum = parseInt(allDate[1]);
+                this.minDate = new Date( new Date().getFullYear(),new Date().getMonth(),new Date().getDate() + minNum);
+                this.maxDate = new Date( new Date().getFullYear(),new Date().getMonth(),new Date().getDate() + maxNum);
+              }
+  
+              //被保人职业判断过滤
+              res.data.outData.insured.map((data,index)=>{
+                if(data.displayType == 'profCheck' && data.fieldName == 'profession'){
+                  this.profession = data;                 
+                }else{
+                  this.insured.push(data);
+                }
+              })
+              this.workIntro();
             }
           })
           .catch((error)=>{
 
           })
+    },
+    //身份证识别出生日期
+    getCard(idCard){
+      var birthday = "";  
+      if(idCard != null && idCard != ""){  
+          if(idCard.length == 15){  
+              birthday = "19"+idCard.substr(6,6);  
+          } else if(idCard.length == 18){  
+              birthday = idCard.substr(6,8);  
+          }
+          birthday = birthday.replace(/(.{4})(.{2})/,"$1-$2-");
+      }           
+      return birthday;
     },
     getAge(strBirthday) {
       //根据出生日期计算年龄
@@ -652,70 +807,6 @@ export default {
       return true;
 
     },
-    validateForm(insurerValue,insuredValue,beneficiaryValue){
-      //验证格式
-      //校验正则
-      var phoneReg = /^1(3|4|5|6|7|8|9)\d{9}$/;
-      var emailReg = /^\w+@[a-z0-9]+\.[a-z]{2,4}$/;
-      var cardReg = /^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$|^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{2}$/;
-      //校验投保人手机号
-      if(insurerValue.hasOwnProperty( 'insPhone')){
-        if(!(phoneReg.test(insurerValue['insPhone']))){
-            Toast("投保人手机号码格式有误");
-            return false;
-        }
-      }
-      //校验投保人邮箱
-      if(insurerValue.hasOwnProperty( 'insEmail')){
-        if(!(emailReg.test(insurerValue['insEmail']))){
-            Toast("投保人电子邮箱格式有误");
-            return false;
-        }
-      }
-      //校验投保人身份证号
-      if(insurerValue.hasOwnProperty( 'insCredentials') && insurerValue['insCredentialsType'] === '01'){
-        if(!(cardReg.test(insurerValue['insCredentials']))){
-            Toast("投保人身份证格式有误");
-            return false;
-        }
-      }
-      //校验被保人手机号
-      if(insuredValue.hasOwnProperty( 'mobile')){
-        if(!(phoneReg.test(insuredValue['mobile']))){
-            Toast("被保人手机号码格式有误");
-            return false;
-        }
-      }
-      //校验被保人邮箱
-      if(insuredValue.hasOwnProperty( 'email')){
-        if(!(emailReg.test(insuredValue['email']))){
-            Toast("被保人电子邮箱格式有误");
-            return false;
-        }
-      }
-      //校验被保人身份证号
-      if(insuredValue.hasOwnProperty( 'certificateContent') && insuredValue['certificateType'] === '01'){
-        if(!(cardReg.test(insuredValue['certificateContent']))){
-            Toast("被保人身份证格式有误");
-            return false;
-        }
-      }
-      //校验受益人手机号
-      if(beneficiaryValue.hasOwnProperty( 'benMobile')){
-        if(!(phoneReg.test(beneficiaryValue['benMobile']))){
-            Toast("受益人手机号码格式有误");
-            return false;
-        }
-      }
-      //校验受益人身份证号
-      if(beneficiaryValue.hasOwnProperty( 'benCertificateContent') && beneficiaryValue['benCertificateType'] === '01'){
-        if(!(cardReg.test(beneficiaryValue['benCertificateContent']))){
-            Toast("受益人身份证格式有误");
-            return false;
-        }
-      }
-      return true;
-    },
     toInsure(){
       //提交信息时，投保页面投保人、被保人、受益人、订单信息这几个对象固定字段，其余的封装在扩展信息中
       //投保人固定字段
@@ -733,10 +824,14 @@ export default {
       //设置扩展信息对象
       var extentionValue = [];
       //判断起保日期为不为空
-      if(! this.insureDate){
+      if(!this.insureDate){
         Toast("起保日期不能为空");
         return;
       }
+       //校验正则
+      var phoneReg = /^1(3|4|5|6|7|8|9)\d{9}$/;
+      var emailReg = /[0-9a-zA-Z_.-]+[@][0-9a-zA-Z_.-]+([.][a-zA-Z]+){1,2}/;
+      var cardReg = /^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$|^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{2}$/;
       //获取投保人信息
       var insurerValue ={};
       var insurerInfo = this.insurer;
@@ -744,6 +839,7 @@ export default {
       var insurerSexLimit;
       var insurerSexMsg;
       var insurerIdNum;
+      var Credentials1 = false,Credentials2 = false,Credentials3 = false,Credentials4 = false,Credentials5 = false;
       for(var i=0;i<insurerInfo.length;i++){
          if(insurerInfo[i].displayType != 'profCheck' && insurerInfo[i].displayType != 'datesel' ){
             if(insurerObj[insurerInfo[i].fieldName]){
@@ -752,12 +848,37 @@ export default {
             }else{
               extentionValue.push({"colName":insurerInfo[i].fieldName,"colValue":insurerInfo[i].value});
             }
-            if(!insurerInfo[i].value){
+            if(!insurerInfo[i].value && insurerInfo[i].required){
               Toast("投保人"+insurerInfo[i].showName+"不能为空");
               return;
             }
+            if(insurerInfo[i].validateRules !== '' && insurerInfo[i].required){
+              if(JSON.parse(insurerInfo[i].validateRules).mobile){//投保人手机校验
+                if(!(phoneReg.test(insurerInfo[i].value))){
+                    Toast("投保人手机号码格式有误");
+                    return false;
+                }
+              }
+              if(JSON.parse(insurerInfo[i].validateRules).email){//投保人邮箱
+                  if(!(emailReg.test(insurerInfo[i].value))){
+                      Toast("投保人电子邮箱格式有误");
+                      return false;
+                  }
+              }
+            }
+            if(insurerInfo[i].fieldName == 'insCredentialsType'){
+              if(insurerInfo[i].value === '01'){
+                 Credentials1 = true;
+              }
+            }
+            if(insurerInfo[i].fieldName == 'insCredentials' && Credentials1 && insurerInfo[i].required){//投保人身份证类型
+                if(!(cardReg.test(insurerInfo[i].value))){
+                    Toast("投保人身份证格式有误");
+                    return false;
+                }
+            }
             //校验后台设定的规则
-            if(insurerInfo[i].validateRules){
+            if(insurerInfo[i].validateRules && insurerInfo[i].required){
                var testRuleResult = this.testRules('投保人信息',insurerInfo[i]);
                if(!testRuleResult){
                   return;
@@ -772,34 +893,37 @@ export default {
                         insurerIdNum = insurerInfo[i].value;
                      }
                 }
-
-
             }
-         }else{
-            if(insurerInfo[i].displayType == 'profCheck'){
-                insurerValue[insurerInfo[i].fieldName] = this.profCode2;
-                if(!this.profCode2){
-                  Toast("投保人职业不能为空");
-                  return;
-                }
-            }else if(insurerInfo[i].displayType == 'datesel'){
-                insurerValue[insurerInfo[i].fieldName] = this.insureBirthDate;
-                if(!this.insureBirthDate){
-                  Toast("投保人出生日期不能为空");
-                  return;
-                }
-                //校验投保人后台的年龄限制
-                if(insurerInfo[i].validateRules){
-                    var age = this.getAge(this.insureBirthDate);
-                    var rule = JSON.parse(insurerInfo[i].validateRules);
-                    var ruleMsg = JSON.parse(insurerInfo[i].validateMsg);
-                    if(rule.birthLimit && (age > parseInt(rule.birthLimit[1]) || age < parseInt(rule.birthLimit[0]) ) ){
-                       Toast("投保人"+ (ruleMsg.birthLimit).replace(/\{0\}/g,rule.birthLimit[0]).replace(/\{1\}/g,rule.birthLimit[1]));
-                       return;
+         }
+        if(insurerInfo[i].displayType == 'profCheck' && insurerInfo[i].required){
+            insurerValue[insurerInfo[i].fieldName] = this.profCode2;
+            if(!this.profCode2){
+              Toast("投保人职业不能为空");
+              return;
+            }
+        }
+        if(insurerInfo[i].displayType == 'datesel' && insurerInfo[i].required){
+            insurerValue[insurerInfo[i].fieldName] = this.insureBirthDate;
+            if(!this.insureBirthDate){
+              Toast("投保人出生日期不能为空");
+              return;
+            }
+            //校验投保人后台的年龄限制
+            if(insurerInfo[i].validateRules){
+                var age = this.getAge(this.insureBirthDate);
+                var rule = JSON.parse(insurerInfo[i].validateRules);
+                var ruleMsg = JSON.parse(insurerInfo[i].validateMsg);
+                if(rule.birthLimit && (age > parseInt(rule.birthLimit[1]) || age < parseInt(rule.birthLimit[0]) ) ){
+                    if(parseInt(rule.birthLimit[1]) == 200){
+                      Toast("投保人年龄必须大于"+parseInt(rule.birthLimit[0])+'岁');
+                      return;
+                    }else{
+                      Toast("投保人"+ (ruleMsg.birthLimit).replace(/\{0\}/g,rule.birthLimit[0]).replace(/\{1\}/g,rule.birthLimit[1]));
+                      return;
                     }
                 }
             }
-         }
+        }
       }
       //获取被保人信息
       var insuredValue ={};
@@ -809,7 +933,7 @@ export default {
       var insuredSexMsg;
       var insuredIdNum;
       for(var i=0;i<insuredInfo.length;i++){
-         if(insuredInfo[i].displayType != 'profCheck' && insuredInfo[i].displayType != 'datesel' ){
+         if(insuredInfo[i].displayType != 'datesel'){
            if(insuredObj[insuredInfo[i].fieldName]){
              //如果被保人固定字段含有页面中被保人字段
              insuredValue[insuredInfo[i].fieldName] = insuredInfo[i].value;
@@ -817,12 +941,37 @@ export default {
              extentionValue.push({"colName":insuredInfo[i].fieldName,"colValue":insuredInfo[i].value});
 
            }
-            if(!insuredInfo[i].value){
+            if(!insuredInfo[i].value && this.insuredShow && insuredInfo[i].required){
               Toast("被保人"+insuredInfo[i].showName+"不能为空");
               return;
             }
+            if(insuredInfo[i].validateRules !== '' && this.insuredShow && insuredInfo[i].required){
+              if(JSON.parse(insuredInfo[i].validateRules).mobile){//被保人手机校验
+                if(!(phoneReg.test(insuredInfo[i].value))){
+                    Toast("被保人手机号码格式有误");
+                    return false;
+                }
+              }
+              if(JSON.parse(insuredInfo[i].validateRules).email){//被保人邮箱
+                  if(!(emailReg.test(insuredInfo[i].value))){
+                      Toast("被保人电子邮箱格式有误");
+                      return false;
+                  }
+              }
+            }
+            if(insuredInfo[i].fieldName == 'certificateType'){
+              if(insuredInfo[i].value === '01'){
+                 Credentials2 = true;
+              }
+            }
+            if(insuredInfo[i].fieldName == 'certificateContent' && Credentials2 && this.insuredShow && insuredInfo[i].required){//被保人身份证类型
+                if(!(cardReg.test(insuredInfo[i].value))){
+                    Toast("被保人身份证格式有误");
+                    return false;
+                }
+            }
              //校验后台设定的规则
-            if(insuredInfo[i].validateRules){
+            if(insuredInfo[i].validateRules && this.insuredShow && insuredInfo[i].required){
                var testRuleResult = this.testRules('被保人信息',insuredInfo[i]);
                if(!testRuleResult){
                   return;
@@ -840,32 +989,55 @@ export default {
 
 
             }
-         }else{
-            if(insuredInfo[i].displayType == 'profCheck'){
-                insuredValue[insuredInfo[i].fieldName] = this.profCode1;
-                if(!this.profCode1){
-                  Toast("被保人职业不能为空");
-                  return;
-                }
-            }else if(insuredInfo[i].displayType == 'datesel'){
-                insuredValue[insuredInfo[i].fieldName] = this.insuredBirthDate;
-                if(!this.insuredBirthDate){
-                  Toast("被保人出生日期不能为空");
-                  return;
-                }
-                //校验被保人后台的年龄限制
-                if(insuredInfo[i].validateRules){
-                    var age = this.getAge(this.insuredBirthDate);
-                    var rule = JSON.parse(insuredInfo[i].validateRules);
-                    var ruleMsg = JSON.parse(insuredInfo[i].validateMsg);
-                    if(rule.birthLimit && (age > parseInt(rule.birthLimit[1]) || age < parseInt(rule.birthLimit[0]) ) ){
-                       Toast("被保人"+ (ruleMsg.birthLimit).replace(/\{0\}/g,rule.birthLimit[0]).replace(/\{1\}/g,rule.birthLimit[1]));
-                       return;
+         }
+        if(insuredInfo[i].displayType == 'datesel' && insuredInfo[i].required){
+          if(this.insuredShow){
+            insuredValue[insuredInfo[i].fieldName] = this.insuredBirthDate;
+            if(!this.insuredBirthDate){
+              Toast("被保人出生日期不能为空");
+              return;
+            }
+            //校验被保人后台的年龄限制
+            if(insuredInfo[i].validateRules){
+                var age = this.getAge(this.insuredBirthDate);
+                var rule = JSON.parse(insuredInfo[i].validateRules);
+                var ruleMsg = JSON.parse(insuredInfo[i].validateMsg);
+                if(rule.birthLimit && (age > parseInt(rule.birthLimit[1]) || age < parseInt(rule.birthLimit[0]) ) ){
+                  if(parseInt(rule.birthLimit[1]) == 200){
+                      Toast("被保人年龄必须大于"+parseInt(rule.birthLimit[0])+'岁');
+                      return;
+                    }else{
+                      Toast("被保人"+ (ruleMsg.birthLimit).replace(/\{0\}/g,rule.birthLimit[0]).replace(/\{1\}/g,rule.birthLimit[1]));
+                      return;
                     }
                 }
             }
-         }
+          }else{
+            //被保人是本人后台的年龄限制
+            if(insuredInfo[i].validateRules){               
+                var age = this.getAge(this.insureBirthDate);
+                var rule = JSON.parse(insuredInfo[i].validateRules);
+                var ruleMsg = JSON.parse(insuredInfo[i].validateMsg);
+                if(rule.birthLimit && (age > parseInt(rule.birthLimit[1]) || age < parseInt(rule.birthLimit[0]) ) ){
+                  if(parseInt(rule.birthLimit[1]) == 200){
+                      Toast("被保人年龄必须大于"+parseInt(rule.birthLimit[0])+'岁');
+                      return;
+                    }else{
+                      Toast("被保人"+ (ruleMsg.birthLimit).replace(/\{0\}/g,rule.birthLimit[0]).replace(/\{1\}/g,rule.birthLimit[1]));
+                      return;
+                    }
+                }
+            }
+          }
+        }
       }
+      if(this.profession.displayType == 'profCheck' && this.profession.required){
+            insuredValue[this.profession.fieldName] = this.profCode1;
+            if(!this.profCode1){
+              Toast("被保人职业不能为空");
+              return;
+            }
+        }
       //获取受益人信息
       var beneficiaryValue ={};
       var beneficiaryInfo = this.beneficiary;
@@ -878,12 +1050,37 @@ export default {
                }else{
                   extentionValue.push({"colName":beneficiaryInfo[i].fieldName,"colValue":beneficiaryInfo[i].value});
                }
-              if(!beneficiaryInfo[i].value){
+              if(!beneficiaryInfo[i].value && beneficiaryInfo[i].required){
                 Toast("受益人"+beneficiaryInfo[i].showName+"不能为空");
                 return;
               }
+              if(beneficiaryInfo[i].validateRules !== '' && beneficiaryInfo[i].required){
+              if(JSON.parse(beneficiaryInfo[i].validateRules).mobile){//受益人手机校验
+                if(!(phoneReg.test(beneficiaryInfo[i].value))){
+                    Toast("受益人手机号码格式有误");
+                    return false;
+                }
+              }
+              if(JSON.parse(beneficiaryInfo[i].validateRules).email){//受益人邮箱
+                  if(!(emailReg.test(beneficiaryInfo[i].value))){
+                      Toast("受益人电子邮箱格式有误");
+                      return false;
+                  }
+              }
+            }
+            if(beneficiaryInfo[i].fieldName == 'benCertificateType'){
+              if(beneficiaryInfo[i].value === '01'){
+                 Credentials5 = true;
+              }
+            }
+            if(beneficiaryInfo[i].fieldName == 'benCertificateContent' && Credentials5 && beneficiaryInfo[i].required){//受益人身份证类型
+                if(!(cardReg.test(beneficiaryInfo[i].value))){
+                    Toast("受益人身份证格式有误");
+                    return false;
+                }
+            }
               //校验后台设定的规则
-              if(beneficiaryInfo[i].validateRules){
+              if(beneficiaryInfo[i].validateRules && beneficiaryInfo[i].required){
                  var testRuleResult = this.testRules('受益人信息',beneficiaryInfo[i]);
                  if(!testRuleResult){
                    return;
@@ -891,11 +1088,6 @@ export default {
               }
            }
         }
-      }
-      //正则校验判断格式
-      var validateResult = this.validateForm(insurerValue,insuredValue,beneficiaryValue);
-      if(!validateResult){
-        return;
       }
       //校验投保人身份证的男女性别是否与后台限制的一致
       if(insurerSexLimit){
@@ -931,12 +1123,37 @@ export default {
                }else{
                  extentionValue.push({"colName":emergencyInfo[i].fieldName,"colValue":emergencyInfo[i].value});
                }
-              if(!emergencyInfo[i].value){
+              if(!emergencyInfo[i].value && emergencyInfo[i].required){
                 Toast("紧急联系人"+emergencyInfo[i].showName+"不能为空");
                 return;
               }
+              if(emergencyInfo[i].validateRules !== '' && emergencyInfo[i].required){
+                if(JSON.parse(emergencyInfo[i].validateRules).mobile){//紧急联系人手机校验
+                  if(!(phoneReg.test(emergencyInfo[i].value))){
+                      Toast("紧急联系人手机号码格式有误");
+                      return false;
+                  }
+                }
+                if(JSON.parse(emergencyInfo[i].validateRules).email){//紧急联系人邮箱
+                    if(!(emailReg.test(emergencyInfo[i].value))){
+                        Toast("紧急联系人电子邮箱格式有误");
+                        return false;
+                    }
+                }
+              }
+              // if(emergencyInfo[i].fieldName == 'insCredentialsType'){
+              //   if(emergencyInfo[i].value === '01'){
+              //     Credentials3 = true;
+              //   }
+              // }
+              // if(emergencyInfo[i].fieldName == 'insCredentials' && Credentials3){//紧急联系人身份证类型
+              //     if(!(cardReg.test(emergencyInfo[i].value))){
+              //         Toast("紧急联系人身份证格式有误");
+              //         return false;
+              //     }
+              // }
               //校验后台设定的规则
-              if(emergencyInfo[i].validateRules){
+              if(emergencyInfo[i].validateRules && emergencyInfo[i].required){
                  var testRuleResult = this.testRules('紧急联系人',emergencyInfo[i]);
                  if(!testRuleResult){
                     return;
@@ -952,12 +1169,37 @@ export default {
            if(otherInfo[i].displayType != 'profCheck' && otherInfo[i].displayType != 'datesel' ){
 
               extentionValue.push({"colName":otherInfo[i].fieldName,"colValue":otherInfo[i].value});
-              if(!otherInfo[i].value){
+              if(!otherInfo[i].value && otherInfo[i].required){
                 Toast("其它信息"+otherInfo[i].showName+"不能为空");
                 return;
               }
+              if(otherInfo[i].validateRules !== '' && otherInfo[i].required){
+                if(JSON.parse(otherInfo[i].validateRules).mobile){//其它信息手机校验
+                  if(!(phoneReg.test(otherInfo[i].value))){
+                      Toast("其它信息手机号码格式有误");
+                      return false;
+                  }
+                }
+                if(JSON.parse(otherInfo[i].validateRules).email){//其它信息邮箱
+                    if(!(emailReg.test(otherInfo[i].value))){
+                        Toast("其它信息电子邮箱格式有误");
+                        return false;
+                    }
+                }
+              }
+              // if(otherInfo[i].fieldName == 'insCredentialsType'){
+              //   if(otherInfo[i].value === '01'){
+              //     Credentials4 = true;
+              //   }
+              // }
+              // if(otherInfo[i].fieldName == 'insCredentials' && Credentials4){//其它信息身份证类型
+              //     if(!(cardReg.test(otherInfo[i].value))){
+              //         Toast("其它信息身份证格式有误");
+              //         return false;
+              //     }
+              // }
               //校验后台设定的规则
-              if(otherInfo[i].validateRules){
+              if(otherInfo[i].validateRules && otherInfo[i].required){
                  var testRuleResult = this.testRules('其它信息',otherInfo[i]);
                  if(!testRuleResult){
                    return;
@@ -1001,9 +1243,16 @@ export default {
     },
     //职业信息
     workIntro(){
+        let codeDateType = '';
+        if(JSON.stringify(this.profession) !== '{}' && this.profession.validateRules !== ''){
+          codeDateType = JSON.parse(this.profession.validateRules).profLimit;
+        }
         this.$ajax({
             method:'post',
-            url:'/insurance/api/insure/queryProfessionByProId/' + this.$route.query.id
+            url:'/insurance/api/insure/queryProfessionByProId/' + this.$route.query.id,
+            params:{
+              'codeDateType':codeDateType
+            }
           })
           .then((res)=>{
             if(res.data &&  res.data.code === 1){
@@ -1028,7 +1277,7 @@ export default {
             this.jobShow2 = id
         }
     },
-    changeProvince(validateRules,provinceValue){
+    changeProvince(validateRules,provinceValue,fldgroup){
       var queryCityData = JSON.parse(validateRules).linkLoadDate;
       var queryUrl = queryCityData[0] + '?insProvince=' + provinceValue;
       this.$ajax({
@@ -1037,7 +1286,13 @@ export default {
       })
       .then((res)=>{
         if(res.data &&  res.data.code === 1){
+          console.log(fldgroup);
+          if(fldgroup == 'insurer'){//投保人数据
+            this.Citys = res.data.outData.data;
+          }
+          if(fldgroup == 'insured'){//被保人数据
             this.insCitys = res.data.outData.data;
+          }
         }
       })
       .catch((error)=>{
@@ -1045,9 +1300,12 @@ export default {
       })
     }
   },
+  
   mounted(){
-      this.getInsureIntro();
-      this.workIntro();
+    this.getInsureIntro();
+  },
+  updated(){
+    // console.log(this.$refs.selectBox.selectedIndex);
   }
 
 
@@ -1087,5 +1345,18 @@ export default {
 .insure-wrap .van-cell__value{
     -webkit-box-flex: 2;
     flex: 2;
+}
+.insure-wrap .van-cell__right-icon{
+  color:#999;
+  margin-right: -3px;
+}
+.required-icon,.required1-icon{
+  float: left;
+  line-height: .68rem;
+  color:#fe2f46;
+  margin-left: .08rem;
+}
+.required1-icon{
+  margin-top: .347rem;
 }
 </style>

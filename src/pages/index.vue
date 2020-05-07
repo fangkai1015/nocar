@@ -1,9 +1,9 @@
 <template>
   <section class="insure-con">
         <header class="insure-title">非车险产品</header>
-        <!-- <div class="banner-box">
-            <img src="../../static/image/index_banner.jpg" alt="非车险种">
-        </div> -->
+        <div class="banner-box">
+            <img src="../../static/image/banner.jpg" alt="非车险种">
+        </div>
         <van-swipe :autoplay="3000">
             <van-swipe-item v-for="(image, index) in images" :key="index">
                 <img v-lazy="image.imgUrl" />
@@ -83,7 +83,7 @@ export default {
       urlEnter(url){
         let hostname = window.location.hostname;
         if (hostname.indexOf("192.168.1.") != -1 || hostname.indexOf("localhost") != -1) {
-         window.location.href = 'http://192.168.1.32:83/' + url;
+         window.location.href = 'http://192.168.1.32/' + url;
         } else {
           window.location.href = 'https://agt.yanzhaoic.com/' + url;
         }

@@ -7,7 +7,8 @@
                 <img src="../../static/image/shop_banner.jpg" alt="我的微店" class="shop-banner">
                 <div class="shop-content">
                     <div class="shop-user">
-                        <div class="shopUser-pic"><img :src="shopContent.wdLogo || '../../static/image/default.png'" alt="头像" class="shopUser-img"></div>
+                        <div class="shopUser-pic" v-if="shopContent.wdLogo"><img :src="shopContent.wdLogo" alt="头像" class="shopUser-img"></div>
+                        <div class="shopUser-pic" v-else><img src="../../static/image/default.png" alt="头像" class="shopUser-img"></div>
                         <div class="shopUser-intro">
                             <div class="shopUser-name">{{shopName}}<span class="shareCount">分享次数：{{shopContent.shareNum}}</span><span class="lookCount">访问量：{{shopContent.visitNum}}</span></div>
                             <div class="shopUser-count">
@@ -222,7 +223,7 @@ export default {
         //分享信息
         wxBox(data){
             let shareTitle = '燕赵财险',
-                shareDesc = '燕赵财险为您提供一份保障、一份健康'
+                shareDesc = '燕赵财险为您提供一份保障、一份健康';
             this.wx.config({
             debug: false, 
             appId: data.appId, // 必填，公众号的唯一标识
@@ -235,16 +236,16 @@ export default {
                 this.wx.updateAppMessageShareData({ 
                     title: shareTitle, // 分享标题
                     desc: shareDesc, // 分享描述
-                    link: data.url, // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-                    imgUrl: '/static/image/company_logo.png', // 分享图标
+                    link: data.link, // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+                    imgUrl: '../../static/image/company_logo.png', // 分享图标
                     success: function () {
                     // 设置成功
                     }
                 })
                 this.wx.updateTimelineShareData({ 
                     title: shareTitle, // 分享标题
-                    link: data.url, // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-                    imgUrl: '/static/image/company_logo.png', // 分享图标
+                    link: data.link, // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+                    imgUrl: '../../static/image/company_logo.png', // 分享图标
                     success: function () {
                     // 设置成功
                     }

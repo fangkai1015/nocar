@@ -80,7 +80,6 @@
             <div class="insure-service contentItem">
                 <div class="intro-title">理赔服务</div>
                 <div class="service-box">
-                    <div class="plan-title">理赔流程</div>
                     <article class="service-article" v-html="informations.compensationHint" :class="{boxauto:autoOk1}">
                     </article>
                     <div class="more-btn" ref="more3" @click="moreLook3">查看更多</div>
@@ -288,6 +287,7 @@ export default {
           this.select=index;
           this.priceAll = price;
           this.priceCalcuFlag = priceCalcuFlag;
+          this.comboId = comboId;
           this.insureIntro(comboId);
       },
       //协议确定
@@ -346,14 +346,7 @@ export default {
             Toast('请先确认协议再投保');
             return;
         }
-        if(this.agressYes && this.priceCalcuFlag){
-            this.insureConfirm = true;
-            this.weeboxBg = true;
-        }else if(this.health){
-            //进入健康告知页面
-            this.$router.push({path: '/health',query:{ id:this.$route.params.id}});
-        }else{
-          let productIntro = {
+        let productIntro = {
               comboId: this.comboId,
               eleView1: this.eleView1,
               eleView2: this.eleView2,
@@ -363,7 +356,14 @@ export default {
               viewTime: this.viewTime,
               priceId: this.priceId
           }
-          localStorage.setItem('productVal',JSON.stringify(productIntro));
+        localStorage.setItem('productVal',JSON.stringify(productIntro));
+        if(this.agressYes && this.priceCalcuFlag){
+            this.insureConfirm = true;
+            this.weeboxBg = true;
+        }else if(this.health){
+            //进入健康告知页面
+            this.$router.push({path: '/health',query:{ id:this.$route.params.id}});
+        }else{         
           //进入填写投保信息页面
           this.$router.push({path: '/insureIntro',query:{ id:this.$route.params.id}});
         }
@@ -384,12 +384,11 @@ export default {
                 viewTime: this.viewTime,
                 priceId: this.priceId
             }
+        localStorage.setItem('productVal',JSON.stringify(productIntro));
         if(this.health){
-            localStorage.setItem('productVal',JSON.stringify(productIntro));
             //进入健康告知页面
             this.$router.push({path: '/health',query:{ id:this.$route.params.id}});
-        }else{
-             localStorage.setItem('productVal',JSON.stringify(productIntro));
+        }else{        
         //进入填写投保信息页面
           this.$router.push({path: '/insureIntro',query:{ id:this.$route.params.id}});
         }
@@ -719,7 +718,7 @@ export default {
     //分享信息
     wxBox(data){
         let shareTitle = '燕赵财险',
-            shareDesc = '燕赵财险为您提供一份保障、一份健康'
+            shareDesc = '燕赵财险为您提供一份保障、一份健康';
         this.wx.config({
         debug: false, 
         appId: data.appId, // 必填，公众号的唯一标识
@@ -732,16 +731,16 @@ export default {
             this.wx.updateAppMessageShareData({ 
                 title: shareTitle, // 分享标题
                 desc: shareDesc, // 分享描述
-                link: data.url, // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-                imgUrl: '/static/image/company_logo.png', // 分享图标
+                link: data.link, // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+                imgUrl: '../../static/image/company_logo.png', // 分享图标
                 success: function () {
                 // 设置成功
                 }
             })
             this.wx.updateTimelineShareData({ 
                 title: shareTitle, // 分享标题
-                link: data.url, // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-                imgUrl: '/static/image/company_logo.png', // 分享图标
+                link: data.link, // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+                imgUrl: '../../static/image/company_logo.png', // 分享图标
                 success: function () {
                 // 设置成功
                 }

@@ -136,19 +136,21 @@ export default {
     filters: {
       getCredentialsType(typeCode){
           if(typeCode === "01"){
-            return "身份证";
+            return "居民身份证";
           }else if(typeCode === "02"){
             return "护照";
           }else if(typeCode === "03"){
            return "军人证";
-         }else if(typeCode === "04"){
-           return "驾照";
-         }else if(typeCode === "05"){
-           return "港澳回乡证";
          }else if(typeCode === "07"){
            return "中国护照";
          }else if(typeCode === "08"){
-           return "台胞证";
+           return "外国人永久居留身份证";
+         }else if(typeCode === "09"){
+           return "港澳台居民身份证";
+         }else if(typeCode === "10"){
+           return "港澳同胞回乡证（通行证）";
+         }else if(typeCode === "11"){
+           return "台湾居民来往大陆通行证";
          }else if(typeCode === "1"){
            return "组织机构代码证";
          }else if(typeCode === "2"){

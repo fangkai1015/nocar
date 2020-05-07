@@ -498,7 +498,7 @@ body{
     top: .213rem
 }
 .service-box{
-    padding:0.4rem 0.4rem 0;
+    padding:0 0.4rem 0;
 }
 .service-title{
     font-size: .453rem;
@@ -1259,6 +1259,7 @@ body{
     border:none;
     font-size: .4rem;
     text-align: right;
+    width: 6rem;
 }
 .insureIntro-select{
     border: none;
@@ -1270,6 +1271,7 @@ body{
     background-size: .187rem .32rem;
     direction: rtl;
     height: 1.253rem;
+    width: 6rem;
 }
 .insureIntro-select option{
     direction: ltr;
@@ -1305,9 +1307,6 @@ body{
 }
 .people-tab span:not(:last-child){
     margin-right: .4rem;
-}
-.toubao-con{
-    border-bottom: 1px solid #f0f0f0;
 }
 .add-btn{
     line-height: 1.467rem;
@@ -1366,6 +1365,11 @@ body{
 }
 .syr-box .column-del{
     top: 0;
+}
+.syr-intro{
+    font-size: .4rem;
+    padding:0.4rem;
+    color:#1769b2;
 }
 /*订单*/
 .order-content{

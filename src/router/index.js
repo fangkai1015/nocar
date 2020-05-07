@@ -1,17 +1,5 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import index from '@/pages/index'
-import detail from '@/pages/detail'
-import health from '@/pages/health'
-import insureIntro from '@/pages/insureIntro'
-import orderDetail from '@/pages/orderDetail'
-import orderList from '@/pages/orderList'
-import pay from '@/pages/pay'
-import myShop from '@/pages/myShop'
-import setCard from '@/pages/setCard'
-import editCard from '@/pages/editCard'
-import setShop from '@/pages/setShop'
-import editShop from '@/pages/editShop'
 
 Vue.use(Router)
 
@@ -23,62 +11,62 @@ export default new Router({
     {
       path: '/',
       name: 'index',
-      component: index
+      component: resolve=>require(["@/pages/index"],resolve)
     },
     {
       path: '/detail/:id',
       name: 'detail',
-      component: detail
+      component: resolve=>require(["@/pages/detail"],resolve)
     },
     {
       path: '/health',
       name: 'health',
-      component: health
+      component: resolve=>require(["@/pages/health"],resolve)
     },
     {
       path: '/insureIntro',
       name: 'insureIntro',
-      component: insureIntro
+      component: resolve=>require(["@/pages/insureIntro"],resolve)
     },
     {
       path: '/orderDetail',
       name: 'orderDetail',
-      component: orderDetail
+      component: resolve=>require(["@/pages/orderDetail"],resolve)
     },
     {
       path: '/orderList',
       name: 'orderList',
-      component: orderList
+      component: resolve=>require(["@/pages/orderList"],resolve)
     },
     {
       path: '/pay',
       name: 'pay',
-      component: pay
+      component: resolve=>require(["@/pages/pay"],resolve)
     },
     {
       path: '/myShop',
       name: 'myShop',
-      component: myShop
+      component: resolve=>require(["@/pages/myShop"],resolve)
     },
     {
       path: '/setCard',
       name: 'setCard',
-      component: setCard
+      component: resolve=>require(["@/pages/setCard"],resolve)
     },
     {
       path: '/editCard',
       name: 'editCard',
-      component: editCard
+      component: resolve=>require(["@/pages/editCard"],resolve)
     },
     {
       path: '/setShop',
       name: 'setShop',
-      component: setShop
+      component: resolve=>require(["@/pages/setShop"],resolve)
     },
     {
       path: '/editShop',
       name: 'editShop',
-      component: editShop
+      component: resolve=>require(["@/pages/editShop"],resolve)
     }
   ]
 })

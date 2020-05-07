@@ -4,7 +4,7 @@
         </headerbox>
         <div class="pay-con">
             <div class="pay-top">
-                <div class="payTop-tip">请于<span>2020-02-04 23:50</span>前完成支付，<br>否则订单将取消。</div>
+                <div class="payTop-tip">请于<span>{{billInfo.payLimitTime}}</span>前完成支付，<br>否则订单将取消。</div>
                 <div class="payTop-money">¥<span>{{billInfo.premium}}</span></div>
                 <div class="payTop-name">{{billInfo.insProductName}}</div>
             </div>

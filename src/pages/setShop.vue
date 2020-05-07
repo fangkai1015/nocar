@@ -6,7 +6,8 @@
             <div class="shopImage-area">
                 <div class="shopImage-tit">微店头像</div>
                 <div class="shopImage-wrapper point">
-                    <img class="shopImage" :src="shopLogo || '../../static/image/default.png'">
+                    <img class="shopImage" :src="shopLogo" v-if="shopLogo">
+                    <img class="shopImage" src="../../static/image/default.png" v-else>
                     <van-uploader :after-read="afterRead" />
                 </div>
             </div>
@@ -87,7 +88,7 @@ export default {
 }
 </script>
 <style>
-.van-uploader{
+.card-wrap .van-uploader{
     position: absolute;
     right: 0;
     top:0;
