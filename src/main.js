@@ -16,6 +16,25 @@ if(ENV === 'development'){
   axios.defaults.baseURL = ''
 }
 
+// http response 拦截器
+axios.interceptors.response.use(
+  response => {
+    if(response.data.code == 9){
+      let hostname = window.location.hostname;
+      window.location.href = 'http://' + hostname + '/mine/login2.shtml';
+    }
+    return response;
+},
+error => {
+if (error.response) {
+  switch (error.response.status) {
+    case 401:
+      let hostname = window.location.hostname;
+      window.location.href = 'http://' + hostname + '/mine/login2.shtml';
+  }
+}
+});
+
 //微信端输入框弹起页面高度变化bug处理
 Vue.directive('blur',{
   bind:function(el, binding, vnode, oldVnode){

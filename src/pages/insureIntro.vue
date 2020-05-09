@@ -71,7 +71,7 @@
                                   </template>
                                  </van-cell>
                                  <van-popup v-model="insureBirthPop" :label="insurerItem.showName" position="bottom" :overlay="true">
-                                      <van-datetime-picker  type="date"   @cancel="insureBirthPop = false" @confirm="confirmInsureBirthDate"   :min-date="minBirthDate"  :max-date="maxBirthDate"/>
+                                      <van-datetime-picker  type="date"   @cancel="insureBirthPop = false" @confirm="confirmInsureBirthDate"   :min-date="minBirthDate"  :max-date="maxBirthDate" v-model="currentBirthDate1"/>
                                   </van-popup>
                             </div>
 
@@ -142,7 +142,7 @@
                                             </template>
                                          </van-cell>
                                          <van-popup v-model="insuredBirthPop" :label="insuredItem.showName" position="bottom" :overlay="true">
-                                              <van-datetime-picker  type="date" @cancel="insuredBirthPop = false" @confirm="confirmInsuredBirthDate"  :min-date="minBirthDate" :max-date="maxBirthDate"/>
+                                              <van-datetime-picker  type="date" @cancel="insuredBirthPop = false" @confirm="confirmInsuredBirthDate"  :min-date="minBirthDate" :max-date="maxBirthDate" v-model="currentBirthDate2"/>
                                           </van-popup>
                                     </div>
                                 </li>
@@ -459,6 +459,8 @@ export default {
       insuredBirthPop:false,
       minBirthDate: new Date(1900, 0, 1),
       maxBirthDate:new Date(),
+      currentBirthDate1:new Date( new Date().getFullYear() - 18,new Date().getMonth(),new Date().getDate()),
+      currentBirthDate2:new Date( new Date().getFullYear() - 18,new Date().getMonth(),new Date().getDate()),
       workShow1:false,
       workShow2:false,
       workClear1:false,
@@ -573,6 +575,8 @@ export default {
           if(data.value && cardReg.test(data.value)){
               idCard = data.value
               this.insureBirthDate = this.getCard(idCard);
+              let dateBox = this.getCard(idCard).split('-');
+              this.currentBirthDate1 = new Date(dateBox[0],dateBox[1]-1,dateBox[2]);
           }
         }
         
@@ -580,6 +584,8 @@ export default {
           if(data.value && cardReg.test(data.value)){
               valCard = data.value
               this.insuredBirthDate = this.getCard(valCard);
+              let dateBox1 = this.getCard(valCard).split('-');
+              this.currentBirthDate2 = new Date(dateBox1[0],dateBox1[1]-1,dateBox1[2]);
           }
         }
         if(fieldName == 'insSex' && cardType1){//投保人身份证号码带出性别

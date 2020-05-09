@@ -19,6 +19,7 @@
                 </div>
                 <div class="insurance-items">
                     <div class="insurance-item">被保人：{{orderContent.assured}}</div>
+                     <div class="insurance-item">订单号：{{orderContent.billcode || '暂无'}}</div>
                     <div class="insurance-item">保障起期：{{orderContent.enabledate}}</div>
                     <div class="insurance-item">保障止期：{{orderContent.disenabledate}}</div>
                     <div class="insurance-item">支付金额：<span class="insurance-fee">{{orderContent.premium}}元</span></div>

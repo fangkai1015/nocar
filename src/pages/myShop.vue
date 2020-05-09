@@ -10,7 +10,7 @@
                         <div class="shopUser-pic" v-if="shopContent.wdLogo"><img :src="shopContent.wdLogo" alt="头像" class="shopUser-img"></div>
                         <div class="shopUser-pic" v-else><img src="../../static/image/default.png" alt="头像" class="shopUser-img"></div>
                         <div class="shopUser-intro">
-                            <div class="shopUser-name">{{shopName}}<span class="shareCount">分享次数：{{shopContent.shareNum}}</span><span class="lookCount">访问量：{{shopContent.visitNum}}</span></div>
+                            <div class="shopUser-name">{{shopName}}<span class="lookCount">访问量：{{shopContent.visitNum}}</span></div>
                             <div class="shopUser-count">
                                 <span class="seekBtn" @click="seekIntro">保险咨询</span>
                                 <span class="shareBtn" @click="shareIntro">分享店铺</span>
@@ -27,7 +27,8 @@
                                 <li v-for="product in products" :key="product.id" @click="productEnter(product.id)">
                                     <img v-lazy="product.proPicUrl" alt="产品图" class="produce-img">
                                     <div class="produce-name">{{product.name}}</div>
-                                    <div class="produce-tip">{{product.productAdv}}</div>
+                                    <div class="produce-tip" v-if="product.productAdv">{{product.productAdv}}</div>
+                                    <div class="produce-tip">访问量：{{product.popularity}}</div>
                                 </li>
                             </ul>
                         </div>
@@ -52,7 +53,8 @@
         <div class="seek-weebox" v-show="seekShow">
             <div class="seek-close" @click="seekClose"></div>
             <div class="seek-user">
-                <div class="seekUser-pic"><img :src="shopContent.wdLogo || '/static/image/default.png'"></div>
+                <div class="seekUser-pic" v-if="shopContent.wdLogo"><img :src="shopContent.wdLogo"></div>
+                <div class="seekUser-pic" v-else><img src="../../static/image/default.png"></div>
                 <div class="seekUser-name">{{userName}}</div>
             </div>
             <div class="seek-item">

@@ -18,6 +18,7 @@
 
             <div class="bz-plan">
                 <div class="plan-title">保障计划</div>
+                <div class="plan-more" @click="planMore(select)">查看详情<van-icon name="arrow" /></div>
                 <div class="plan-tab">
                     <div class="planTab-box" v-for="(combo,index) in combos" :key="combo.comboId" :class="{select:select==index}" @click="toggleTab(index,combo.comboId,combo.viewPrice,combo.priceCalcuFlag)" v-show="tabShow">{{combo.comboName}}</div>
                 </div>
@@ -134,6 +135,20 @@
           </div>
         </div>
 
+        <!--保障详情-->
+        <div class="insure-weebox" :class="{'insureShow':planShow}">
+          <div class="weebox-header">
+              <div class="weebox-title">保障内容</div>
+              <span class="weebox-close" @click="planClose"></span>
+          </div>
+          <div class="weebox-con">
+              <div class="ensure-box" v-for="(ensure,index) in ensureCon" :key="ensure.contentId">
+                  <div class="ensure-title">{{index+1}}、{{ensure.contentName}}（{{ensure.contentType == 0 ? "主险" : "附加险"}}）</div>
+                  <div class="ensure-detail">{{ensure.contentContent}}</div>
+              </div>
+          </div>
+        </div>
+
         <!--pdf样本-->
         <div class="insure-yb" :class="{'insureShow':pdfShow}">
             <header class="insure-header">
@@ -213,6 +228,8 @@ import Vue from 'vue';
 import pdf from 'vue-pdf'
 import { Toast } from 'vant';
 Vue.use(Toast);
+import { Icon } from 'vant';
+Vue.use(Icon);
 import headerbox from '../components/headerbox'
 export default {
   name:'detail',
@@ -274,7 +291,9 @@ export default {
       health:false,//需健康告知提示
       priceId:'',//价格id号
       fixBg:false,
-      shareShow:false
+      shareShow:false,
+      planShow:false,
+      ensureCon:[]
     }
   },
   components:{
@@ -289,6 +308,17 @@ export default {
           this.priceCalcuFlag = priceCalcuFlag;
           this.comboId = comboId;
           this.insureIntro(comboId);
+      },
+      //保障详情
+      planMore(index){
+          this.planShow = true;
+          this.weeboxBg = true;
+          this.ensureCon = this.combos[index].contents;
+      },
+      //保障详情关闭
+      planClose(){
+          this.planShow =false;
+          this.weeboxBg = false;
       },
       //协议确定
       agressAct(){

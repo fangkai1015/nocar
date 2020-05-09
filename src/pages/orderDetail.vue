@@ -1,6 +1,8 @@
 <template>
 <section class="detail-page">
-    <headerbox :titleName="orderTitle"></headerbox>
+    <headerbox :titleName="orderTitle">
+      <div class="home-box" slot="home" @click="returnHome"><van-icon name="wap-home-o"/></div>
+    </headerbox>
     <div class="content-detail">
         <div class="detail-topCont">
             <div class="detail-insureName">{{billInfo.insProductName}}</div>
@@ -10,7 +12,8 @@
         <div class="fail-reason" v-if="stateCode == 6">核保失败原因：{{billInfo.remark}}</div>
         <div class="detail-items">
             <div class="detail-tit">基本信息</div>
-            <div class="detail-item"><div class="detailItem-tit">保单号：</div><div  class="detailItem-val">{{billInfo.pfileCode || '暂无保单号'}}</div></div>
+            <div class="detail-item"><div class="detailItem-tit">保单号：</div><div  class="detailItem-val">{{billInfo.pfileCode || '暂无'}}</div></div>
+            <div class="detail-item"><div class="detailItem-tit">订单号：</div><div  class="detailItem-val">{{billInfo.billCode || '暂无'}}</div></div>
             <div class="detail-item"><div class="detailItem-tit">生效日期：</div><div  class="detailItem-val">{{billInfo.enableDate}}</div></div>
             <div class="detail-item"><div class="detailItem-tit">终止日期：</div><div  class="detailItem-val">{{billInfo.disEnableDate}}</div></div>
             <div class="detail-item"><div class="detailItem-tit">缴费期限：</div><div  class="detailItem-val">{{billInfo.payTime}}</div></div>
@@ -40,6 +43,9 @@
 </template>
 <script>
 import headerbox from '../components/headerbox'
+import Vue from 'vue';
+import { Icon } from 'vant';
+Vue.use(Icon);
 export default {
   name: 'orderDetail',
    components:{
@@ -59,6 +65,9 @@ export default {
     },
     inject:['reload'],
     methods: {
+      returnHome(){
+           this.$router.push({path: '/'});
+        },
       orderIntro(){
           this.$ajax({
             method:'post',
@@ -98,7 +107,7 @@ export default {
                         this.orderStatus = '已失效';
                         break;
                 }
-                if(this.orderDetails.productContentList){
+                if(this.orderDetails.productContentList.length > 0){
                     this.productShow = true;
                 }
             }

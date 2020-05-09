@@ -32,11 +32,12 @@
         <div class="payCode-area" v-show="showQrCode">
           <span class="pay-close" @click="closeQrCode"></span>
           <div class="code-tips">微信支付二维码</div>
-          <img class="code-img" :src="payImg"/>
+          <div id="qrcode"></div>
         </div>
     </section>
 </template>
 <script>
+import QRCode from 'qrcodejs2'  // url生成二维码
 import Vue from 'vue';
 import { Toast } from 'vant';
 Vue.use(Toast);
@@ -49,6 +50,7 @@ export default {
       billInfo:{},
       showQrCode:false,
       payImg:'',
+      payUrl:'',
       timer:'',
       stateCode:''
     }
@@ -109,9 +111,11 @@ export default {
            if(res.data &&  res.data.code == 1){
               Toast.clear();
                this.showQrCode = true;
-               var payUrl = res.data.outData.codeUrl;
-               var payImg = res.data.outData.codeImgUrl;
+               let payUrl = res.data.outData.codeUrl;
+               let payImg = res.data.outData.codeImgUrl;
                this.payImg = payImg;
+               this.payUrl = payUrl;
+               this.qrcode();
            }else if(res.data &&  res.data.code == "-1"){
                Toast(res.data.message);
            }
@@ -121,6 +125,13 @@ export default {
 
        })
      },
+     qrcode() {
+      let qrcode = new QRCode('qrcode', {
+        width: 225,  
+        height: 225,
+        text: this.payUrl // 二维码地址
+      })
+      },
      closeQrCode(){
         this.showQrCode = false;
      }

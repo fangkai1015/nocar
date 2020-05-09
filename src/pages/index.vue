@@ -41,11 +41,11 @@
         </div>
 
         <footer class="footer-nav">
-          <div class="footerNav-item" @click="urlEnter('entering/index.shtml')">
+          <div class="footerNav-item" @click="urlEnter('/entering/index.shtml')">
               <i class="footerNav-icon1"></i>
               <span class="footerNav-txt">首页</span>
           </div>
-          <div class="footerNav-item"  @click="urlEnter('entering/index_car.shtml')">
+          <div class="footerNav-item"  @click="urlEnter('/entering/index_car.shtml')">
               <i class="footerNav-icon2"></i>
               <span class="footerNav-txt">车险</span>
           </div>
@@ -53,7 +53,7 @@
               <i class="footerNav-icon3"></i>
               <span class="footerNav-txt">非车</span>
           </div>
-          <div class="footerNav-item"  @click="urlEnter('myInfo/index.shtml')">
+          <div class="footerNav-item"  @click="urlEnter('/myInfo/index.shtml')">
               <i class="footerNav-icon4"></i>
               <span class="footerNav-txt">我的</span>
           </div>
@@ -82,11 +82,7 @@ export default {
       //url判断
       urlEnter(url){
         let hostname = window.location.hostname;
-        if (hostname.indexOf("192.168.1.") != -1 || hostname.indexOf("localhost") != -1) {
-         window.location.href = 'http://192.168.1.32/' + url;
-        } else {
-          window.location.href = 'https://agt.yanzhaoic.com/' + url;
-        }
+        window.location.href = 'http://'+hostname + url;
       },
       //获取轮播图
       getBanners(){
