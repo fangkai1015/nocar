@@ -27,7 +27,8 @@
                         <div class="plan-list" v-for="content in combo.contents" :key="content.contentId"><div class="plan-left">{{content.contentName}}</div><div class="plan-money">{{content.price}}</div></div>
                     </div>
                     <div class="plan-jb">
-                        <div class="plan-allMoney">¥<span>{{priceAll}}</span></div>
+                        <div class="plan-allMoney" v-if="priceCalcuFlag">¥<span>{{priceNew}}</span>起</div>
+                        <div class="plan-allMoney" v-else>¥<span>{{priceNew}}</span></div>
                         <div class="plan-btn" @click="toConfirmInsure">立即投保</div>
                     </div>
                 </div>
@@ -45,7 +46,6 @@
 
             <!--产品介绍-->
             <div class="produce-intro contentItem">
-                <div class="intro-title title-no">产品介绍</div>
                 <div class="produce-main" v-html="informations.productIntroduce">
                 </div>
             </div>
@@ -89,9 +89,10 @@
         </div>
 
         <footer class="detail-footer">
-            <div class="detail-agress"><i class="agress-btn"  :class="{'agress-yes':agressYes}" @click="agressAct"></i><span>我已经确认并同意<a href="javascript:;" @click="tbOpen">《投保声明》</a><a href="javascript:;" @click="insureRules">《保险条款》</a></span></div>
+            <!-- <div class="detail-agress"><i class="agress-btn"  :class="{'agress-yes':agressYes}" @click="agressAct"></i><span>我已确认并同意及理解<a href="javascript:;"  @click = "selectLookInfo(2)">《投保须知》</a><a href="javascript:;" @click="tbOpen">《投保声明》</a><a href="javascript:;" @click="insureRules">《保险条款》</a><a href="javascript:;" @click="pdfOpen(jobData.docLink,jobData.docName)" v-if="jobShow">《职业类别分类表》</a>内容</span></div> -->
             <div class="footer-content">
-                <div class="footer-bf">¥<span>{{priceAll}}</span></div>
+                <div class="footer-bf" v-if="priceCalcuFlag">¥<span>{{priceNew}}</span>起</div>
+                <div class="footer-bf" v-else>¥<span>{{priceNew}}</span></div>
                 <div class="tb-btn" @click="toConfirmInsure">立即投保</div>
                 <div class="tb-share" @click="shareTip">
                     <i class="share-icon"></i>
@@ -143,7 +144,7 @@
           </div>
           <div class="weebox-con">
               <div class="ensure-box" v-for="(ensure,index) in ensureCon" :key="ensure.contentId">
-                  <div class="ensure-title">{{index+1}}、{{ensure.contentName}}（{{ensure.contentType == 0 ? "主险" : "附加险"}}）</div>
+                  <div class="ensure-title">{{index+1}}、{{ensure.contentName}}</div>
                   <div class="ensure-detail">{{ensure.contentContent}}</div>
               </div>
           </div>
@@ -259,6 +260,7 @@ export default {
       listAll:'',
       comboId:'',
       insureName:'',
+      priceNew:'',
       priceAll:'',
       agressYes:true,//是否同意协议
       rulesShow:false,//条款弹层
@@ -293,7 +295,9 @@ export default {
       fixBg:false,
       shareShow:false,
       planShow:false,
-      ensureCon:[]
+      ensureCon:[],
+      jobShow:false,
+      jobData:{}
     }
   },
   components:{
@@ -305,6 +309,7 @@ export default {
       toggleTab(index,comboId,price,priceCalcuFlag){
           this.select=index;
           this.priceAll = price;
+          this.priceNew = price;
           this.priceCalcuFlag = priceCalcuFlag;
           this.comboId = comboId;
           this.insureIntro(comboId);
@@ -386,7 +391,12 @@ export default {
               viewTime: this.viewTime,
               priceId: this.priceId
           }
+        let productPrice = {
+            priceAll:this.priceAll,
+            priceCalcuFlag:this.priceCalcuFlag
+        }
         localStorage.setItem('productVal',JSON.stringify(productIntro));
+        localStorage.setItem('productPrice',JSON.stringify(productPrice));
         if(this.agressYes && this.priceCalcuFlag){
             this.insureConfirm = true;
             this.weeboxBg = true;
@@ -414,7 +424,12 @@ export default {
                 viewTime: this.viewTime,
                 priceId: this.priceId
             }
+        let productPrice = {
+            priceAll:this.priceAll,
+            priceCalcuFlag:this.priceCalcuFlag
+        }
         localStorage.setItem('productVal',JSON.stringify(productIntro));
+        localStorage.setItem('productPrice',JSON.stringify(productPrice));
         if(this.health){
             //进入健康告知页面
             this.$router.push({path: '/health',query:{ id:this.$route.params.id}});
@@ -573,7 +588,6 @@ export default {
         .then((res)=>{
           if(res.data &&  res.data.code === 1){
               this.prodDetail = res.data.outData.product;
-              this.bookLists = res.data.outData.bookList;
               this.hostUrl = res.data.outData.productFileServer;
               this.insurerCompany = res.data.outData.insurer;
               this.combos = res.data.outData.combos;
@@ -581,19 +595,29 @@ export default {
               this.questionLists = res.data.outData.questionList;
               this.listAll = res.data.outData.questionList.length;
               this.phoneIntro = 'tel:' + this.insurerCompany.telephone;
+              if(this.prodDetail.insureProfession !== '不限职业'){
+                  this.jobShow = true
+              }
               if(res.data.outData.preContent){
                   this.health = true;
                   localStorage.setItem('healthContent',res.data.outData.preContent);
               }else{
                    this.health = false;
               }
+                 res.data.outData.bookList.map((data,i) =>{
+                  if(data.docType !== '09'){
+                      this.bookLists.push(data)
+                  }else{
+                      this.jobData = data
+                  }
+              })
               this.combos.map((data,i) =>{
                   if(i === 0){
                       this.comboId = data.comboId
                      this.insureIntro(this.comboId);
                      this.priceAll = data.viewPrice;
-                     this.priceCalcuFlag = data.priceCalcuFlag;
-                  }
+                     this.priceNew = data.viewPrice;
+                     this.priceCalcuFlag = data.priceCalcuFlag;                  }
               })
               if(this.combos.length > 1){
                   this.tabShow = true;
@@ -811,3 +835,8 @@ export default {
 
 
 </script>
+<style scoped>
+    .footer-content{
+        border:none;
+    }
+</style>

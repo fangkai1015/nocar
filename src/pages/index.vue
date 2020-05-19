@@ -29,7 +29,7 @@
                           </div>
                           <div class="insureList-action">
                               <div class="insureList-money"><span>{{product.price}}</span>元起</div>
-                              <div class="insureList-btn" >立即投保</div>
+                              <div class="insureList-btn" v-if="product.isShowFees == '1'">手续费{{product.commissionRate}}</div>
                           </div>
                         </div>
                     </li>
@@ -81,8 +81,9 @@ export default {
   methods:{
       //url判断
       urlEnter(url){
-        let hostname = window.location.hostname;
-        window.location.href = 'http://'+hostname + url;
+        let host = window.location.host,
+        protocol = window.location.protocol;
+        window.location.href = protocol +'//'+ host + url;
       },
       //获取轮播图
       getBanners(){

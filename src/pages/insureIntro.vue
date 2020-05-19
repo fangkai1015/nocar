@@ -305,11 +305,71 @@
              </div>
             <div class="syr-intro" v-if="!beneficiary">受益人默认为法定受益人</div>      
         </div>
-        <footer class="detail-footer intro-footer">
+        <!-- <footer class="detail-footer intro-footer">
             <div class="footer-content">
                 <div class="tb-btn" @click = "toInsure">立即投保</div>
             </div>
+        </footer> -->
+
+        <footer class="detail-footer">
+            <div class="detail-agress"><i class="agress-btn"  :class="{'agress-yes':agressYes}" @click="agressAct"></i><span>我已详细阅读并同意<a href="javascript:;" @click="tbOpen">《投保声明》</a>, 且明确了解<a href="javascript:;" @click="insureRules">《保险条款》</a><a href="javascript:;"  @click="tbxzOpen">《投保须知》</a><a href="javascript:;" @click="pdfOpen(jobData.docLink,jobData.docName)" v-if="jobShow">《职业类别分类表》</a>相关信息</span></div>
+            <div class="footer-content">
+                <div class="footer-bf">¥<span>{{priceVal.priceAll}}</span></div>
+                <div class="tb-btn" @click="toInsure">立即投保</div>
+            </div>
         </footer>
+
+        <div class="insure-bg" v-show="weeboxBg"></div>
+        <!--弹层信息--->
+        <div class="insure-weebox" :class="{'insureShow':rulesShow}">
+          <div class="weebox-header">
+              <!-- <span class="weebox-return"></span> -->
+              <div class="weebox-title">保险条款</div>
+              <span class="weebox-close" @click="rulesClose"></span>
+          </div>
+          <div class="weebox-con">
+              <div class="weebox-list">
+                  <ul>
+                      <li v-for="bookList in bookLists" :key="bookList.id" @click="pdfOpen(bookList.docLink,bookList.docName)">《{{bookList.docName}}》</li>
+                  </ul>
+              </div>
+          </div>
+        </div>
+
+        <!--投保声明-->
+        <div class="insure-weebox" :class="{'insureShow':tbShow}">
+          <div class="weebox-header">
+              <div class="weebox-title">投保声明</div>
+              <span class="weebox-close" @click="tbClose"></span>
+          </div>
+          <div class="weebox-con">
+              <article class="weebox-article" v-html="prodDetail.declareContent">
+              </article>
+          </div>
+        </div>
+
+       <!--投保须知-->
+        <div class="insure-weebox" :class="{'insureShow':tbxzShow}">
+          <div class="weebox-header">
+              <div class="weebox-title">投保须知</div>
+              <span class="weebox-close" @click="tbxzClose"></span>
+          </div>
+          <div class="weebox-con">
+              <article class="weebox-article" v-html="informations.hint">
+              </article>
+          </div>
+        </div>
+
+        <!--pdf样本-->
+        <div class="insure-yb" :class="{'insureShow':pdfShow}">
+            <header class="insure-header">
+                <h3 class="insure-subtitle">{{docName}}</h3>
+                <div class="yb-close" @click="pdfClose"></div>
+            </header>
+            <div class="yb-content">
+                <pdf ref="pdf" :src="pdfUrl" v-for="i in numPages" :key="i" :page="i"></pdf>
+            </div>
+        </div>
         <!--投保人职业弹层-->
         <van-popup
         v-model="workShow2"
@@ -423,6 +483,7 @@
 </template>
 <script>
 import Vue from 'vue';
+import pdf from 'vue-pdf'
 import { Calendar } from 'vant';
 Vue.use(Calendar);
 import { Cell } from 'vant';
@@ -484,17 +545,81 @@ export default {
       searchEmpty2:false,
       searchList2:[],
       insuredShow:true,
-      profession:{}//被保人职业字段
+      profession:{},//被保人职业字段
+      agressYes:true,//是否同意协议
+      jobShow:false,
+      weeboxBg:false,
+      rulesShow:false,//条款弹层
+      tbShow:false,//投保声明
+      tbxzShow:false,//投保须知
+      pdfShow:false, //pdf文档显示
+      prodDetail:{},
+      pdfUrl:'',//pdf路径
+      numPages:'',//pdf页数
+      jobData:{},
+      bookLists:[],//保险条款
+      docName:'',//文档题目
+      informations:{},
+      priceVal:{}
     }
   },
   components:{
-        'headerbox': headerbox
+        'headerbox': headerbox,
+        'pdf':pdf
    },
   methods:{
-    //初始化select的index
-    selectIndex(){
-          
+    //协议确定
+    agressAct(){
+        if(this.agressYes){
+            this.agressYes = false;
+        }else{
+            this.agressYes = true;
+        }
     },
+    //保险条款弹层
+      insureRules(){
+          this.rulesShow = true;
+          this.weeboxBg = true;
+      },
+      //保险条款关闭
+      rulesClose(){
+          this.rulesShow = false;
+          this.weeboxBg = false;
+      },
+      //打开对应pdf
+      pdfOpen(url,name){
+          this.pdfShow = true;
+          this.docName = name;
+          let loadingTask = pdf.createLoadingTask(this.hostUrl + url)
+          this.pdfUrl = loadingTask;
+          this.pdfUrl.then(pdf => {
+            this.numPages = pdf.numPages;
+        });
+      },
+      //关闭pdf
+      pdfClose(){
+          this.pdfShow = false;
+      },
+      //投保声明打开
+      tbOpen(){
+          this.tbShow = true;
+          this.weeboxBg = true;
+      },
+      //投保声明关闭
+      tbClose(){
+          this.tbShow = false;
+          this.weeboxBg = false;
+      },
+      //投保须知打开
+      tbxzOpen(){
+          this.tbxzShow = true;
+          this.weeboxBg = true;
+      },
+      //投保声明关闭
+      tbxzClose(){
+          this.tbxzShow = false;
+          this.weeboxBg = false;
+      },
     formatDate(date) {
       return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
     },
@@ -637,6 +762,40 @@ export default {
 
           })
     },
+    //产品详情内容
+    proDetail(){
+      let priceVal = JSON.parse(localStorage.getItem('productPrice'));
+      this.priceVal =  priceVal;
+       this.$ajax({
+          headers: { 'Content-Type': 'application/json'},
+          method:'get',
+          url:'/insurance/api/product/details',
+          params:{
+              productId:this.$route.query.id
+            }
+        })
+        .then((res)=>{
+          if(res.data &&  res.data.code === 1){
+              this.prodDetail = res.data.outData.product;
+              this.hostUrl = res.data.outData.productFileServer;
+              this.informations = res.data.outData.information;
+              if(this.prodDetail.insureProfession !== '不限职业'){
+                  this.jobShow = true
+              }
+                 res.data.outData.bookList.map((data,i) =>{
+                  if(data.docType !== '09'){
+                      this.bookLists.push(data)
+                  }else{
+                      this.jobData = data
+                  }
+              })
+        
+          }
+        })
+        .catch((error)=>{
+
+        })
+    },
     //被保人职业弹层
     showPopup1(){
         this.workShow1 = true;
@@ -671,11 +830,7 @@ export default {
               this.beneficiary = res.data.outData.beneficiary;
               //紧急信息
               this.emergency = res.data.outData.emergency;
-              
-              //其它信息
-              if(res.data.outData.otherInfo){
-                this.otherInfo = res.data.outData.otherInfo;
-              }
+              this.workIntro();
               let ableDate = res.data.outData.enableDate
               if(ableDate[0].validateRules !== ''){
                 let allDate = JSON.parse(ableDate[0].validateRules).dateLimit;
@@ -683,17 +838,56 @@ export default {
                 let maxNum = parseInt(allDate[1]);
                 this.minDate = new Date( new Date().getFullYear(),new Date().getMonth(),new Date().getDate() + minNum);
                 this.maxDate = new Date( new Date().getFullYear(),new Date().getMonth(),new Date().getDate() + maxNum);
+                this.insureDate = this.formatDate(new Date( new Date().getFullYear(),new Date().getMonth(),new Date().getDate() + minNum));
               }
-  
+              
               //被保人职业判断过滤
-              res.data.outData.insured.map((data,index)=>{
+              res.data.outData.insured.map((data,index)=>{                 
                 if(data.displayType == 'profCheck' && data.fieldName == 'profession'){
                   this.profession = data;                 
                 }else{
                   this.insured.push(data);
                 }
+                if(data.displayType == 'select' || data.displayType == 'singlecheck'){//证件类型默认选为身份证
+                    if(data.fieldName == 'certificateType'){//证件类型默认选为身份证
+                      let limit = JSON.parse(data.validateRules).valueLimit;
+                      this.insured[index].value = limit[0].value;
+                    }
+                    if(data.fieldName == 'relation'){
+                      let limit = JSON.parse(data.validateRules).valueLimit;
+                      if(limit.length == 1){//只有一个选项即默认选中
+                       this.insured[index].value = limit[0].value;
+                     }
+                    }
+                  }
               })
-              this.workIntro();
+              
+              //投保人信息判断
+              this.insurer.map((data,index) => {
+                if(data.displayType == 'select' || data.displayType == 'singlecheck'){
+                  if(data.fieldName == 'insCredentialsType'){//证件类型默认选为身份证
+                    let limit = JSON.parse(data.validateRules).valueLimit;
+                    this.insurer[index].value = limit[0].value;
+                  }
+                }
+              })
+              //其它信息
+              if(res.data.outData.otherInfo){
+                this.otherInfo = res.data.outData.otherInfo;
+                //其他信息
+                this.otherInfo.map((data,index) => {
+                  if(data.displayType == 'select' && data.fieldName == 'carPlateType'){
+                    let limit = JSON.parse(data.validateRules).valueLimit;                    
+                    this.otherInfo[index].value = limit[0].value;                      
+                  }
+                  if(data.displayType == 'singlecheck'){
+                     let limit = JSON.parse(data.validateRules).valueLimit;
+                     if(limit.length == 1){
+                       this.otherInfo[index].value = limit[0].value;
+                     }                    
+                  }
+                })
+              }
             }
           })
           .catch((error)=>{
@@ -769,6 +963,44 @@ export default {
       }
       return sex;
     },
+    //身份证校验位的检测
+    checkParity(card){
+      //15位转18位
+      card = this.changeFivteenToEighteen(card);
+      var len = card.length;
+      if(len == '18'){
+          var arrInt = new Array(7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2); 
+          var arrCh = new Array('1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'); 
+          var cardTemp = 0, i, valnum; 
+          for(i = 0; i < 17; i ++) { 
+              cardTemp += card.substr(i, 1) * arrInt[i]; 
+          } 
+          valnum = arrCh[cardTemp % 11]; 
+          if (valnum == card.substr(17, 1).toLocaleUpperCase()) 
+          {
+              return true;
+          }
+          return false;
+      }
+      return false;
+    },
+    //15位转18位身份证号
+    changeFivteenToEighteen(card){
+        if(card.length == '15')
+        {
+            var arrInt = new Array(7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2); 
+            var arrCh = new Array('1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'); 
+            var cardTemp = 0, i;   
+            card = card.substr(0, 6) + '19' + card.substr(6, card.length - 6);
+            for(i = 0; i < 17; i ++) 
+            { 
+                cardTemp += card.substr(i, 1) * arrInt[i]; 
+            } 
+            card += arrCh[cardTemp % 11]; 
+            return card;
+        }
+        return card;
+    },
     testRules(personType,infor){
        var rule = JSON.parse(infor.validateRules);
        var ruleMsg = JSON.parse(infor.validateMsg);
@@ -814,6 +1046,10 @@ export default {
 
     },
     toInsure(){
+      if(!this.agressYes){
+            Toast('请先确认协议再投保');
+            return;
+        }
       //提交信息时，投保页面投保人、被保人、受益人、订单信息这几个对象固定字段，其余的封装在扩展信息中
       //投保人固定字段
       var insurerObj =  { "insAddress": true, "insAddressnum": true,"insBirthday": true, "insCredentials": true,"insCredentialsType": true, "insEmail": true,
@@ -838,6 +1074,7 @@ export default {
       var phoneReg = /^1(3|4|5|6|7|8|9)\d{9}$/;
       var emailReg = /[0-9a-zA-Z_.-]+[@][0-9a-zA-Z_.-]+([.][a-zA-Z]+){1,2}/;
       var cardReg = /^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$|^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{2}$/;
+      var carnumberReg = /(^[\u4E00-\u9FA5]{1}[A-Z0-9]{6,7}$)|(^[A-Z]{2}[A-Z0-9]{2}[A-Z0-9\u4E00-\u9FA5]{1}[A-Z0-9]{4}$)|(^[\u4E00-\u9FA5]{1}[A-Z0-9]{5}[挂学警军港澳]{1}$)|(^[A-Z]{2}[0-9]{5}$)|(^(08|38){1}[A-Z0-9]{4}[A-Z0-9挂学警军港澳]{1}$)/;
       //获取投保人信息
       var insurerValue ={};
       var insurerInfo = this.insurer;
@@ -845,7 +1082,7 @@ export default {
       var insurerSexLimit;
       var insurerSexMsg;
       var insurerIdNum;
-      var Credentials1 = false,Credentials2 = false,Credentials3 = false,Credentials4 = false,Credentials5 = false;
+      var Credentials1 = false,Credentials2 = false,Credentials3 = false,Credentials4 = false,Credentials5 = false,carPlateType="";
       for(var i=0;i<insurerInfo.length;i++){
          if(insurerInfo[i].displayType != 'profCheck' && insurerInfo[i].displayType != 'datesel' ){
             if(insurerObj[insurerInfo[i].fieldName]){
@@ -858,9 +1095,9 @@ export default {
               Toast("投保人"+insurerInfo[i].showName+"不能为空");
               return;
             }
-            if(insurerInfo[i].validateRules !== '' && insurerInfo[i].required){
+            if(insurerInfo[i].validateRules !== '' && insurerInfo[i].required){    
               if(JSON.parse(insurerInfo[i].validateRules).mobile){//投保人手机校验
-                if(!(phoneReg.test(insurerInfo[i].value))){
+                if(!(phoneReg.test(insurerInfo[i].value))){                    
                     Toast("投保人手机号码格式有误");
                     return false;
                 }
@@ -878,7 +1115,7 @@ export default {
               }
             }
             if(insurerInfo[i].fieldName == 'insCredentials' && Credentials1 && insurerInfo[i].required){//投保人身份证类型
-                if(!(cardReg.test(insurerInfo[i].value))){
+                if(!(cardReg.test(insurerInfo[i].value)) || !this.checkParity(insurerInfo[i].value)){
                     Toast("投保人身份证格式有误");
                     return false;
                 }
@@ -971,7 +1208,7 @@ export default {
               }
             }
             if(insuredInfo[i].fieldName == 'certificateContent' && Credentials2 && this.insuredShow && insuredInfo[i].required){//被保人身份证类型
-                if(!(cardReg.test(insuredInfo[i].value))){
+                if(!(cardReg.test(insuredInfo[i].value)) || !this.checkParity(insuredInfo[i].value)){
                     Toast("被保人身份证格式有误");
                     return false;
                 }
@@ -1080,7 +1317,7 @@ export default {
               }
             }
             if(beneficiaryInfo[i].fieldName == 'benCertificateContent' && Credentials5 && beneficiaryInfo[i].required){//受益人身份证类型
-                if(!(cardReg.test(beneficiaryInfo[i].value))){
+                if(!(cardReg.test(beneficiaryInfo[i].value)) || !this.checkParity(beneficiaryInfo[i].value)){
                     Toast("受益人身份证格式有误");
                     return false;
                 }
@@ -1173,11 +1410,28 @@ export default {
       if(otherInfo){
         for(var i=0;i<otherInfo.length;i++){
            if(otherInfo[i].displayType != 'profCheck' && otherInfo[i].displayType != 'datesel' ){
-
-              extentionValue.push({"colName":otherInfo[i].fieldName,"colValue":otherInfo[i].value});
               if(!otherInfo[i].value && otherInfo[i].required){
                 Toast("其它信息"+otherInfo[i].showName+"不能为空");
                 return;
+              }
+              if(otherInfo[i].fieldName == 'carPlateType'){
+                carPlateType = otherInfo[i].value;
+              }
+              if(otherInfo[i].fieldName == 'carPlateNo'){
+                let carNumber = otherInfo[i].value.toLocaleUpperCase();
+                otherInfo[i].value = otherInfo[i].value.toLocaleUpperCase();
+                if(carPlateType == '车牌号' && !carnumberReg.test(carNumber)){
+                    Toast("车牌号格式有误");
+                    return false;
+                }
+                if(carPlateType == '发动机号' && carNumber.length < 5){
+                    Toast("发动机号不能小于5位");
+                    return false;
+                }
+                if(carPlateType == '车架号' && carNumber.length !== 17){
+                    Toast("车架号必须为17位");
+                    return false;
+                }
               }
               if(otherInfo[i].validateRules !== '' && otherInfo[i].required){
                 if(JSON.parse(otherInfo[i].validateRules).mobile){//其它信息手机校验
@@ -1211,6 +1465,7 @@ export default {
                    return;
                  }
               }
+              extentionValue.push({"colName":otherInfo[i].fieldName,"colValue":otherInfo[i].value});
            }
         }
       }
@@ -1292,7 +1547,6 @@ export default {
       })
       .then((res)=>{
         if(res.data &&  res.data.code === 1){
-          console.log(fldgroup);
           if(fldgroup == 'insurer'){//投保人数据
             this.Citys = res.data.outData.data;
           }
@@ -1309,6 +1563,7 @@ export default {
   
   mounted(){
     this.getInsureIntro();
+    this.proDetail();
   },
   updated(){
     // console.log(this.$refs.selectBox.selectedIndex);

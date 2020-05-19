@@ -52,7 +52,8 @@ export default {
       payImg:'',
       payUrl:'',
       timer:'',
-      stateCode:''
+      stateCode:'',
+      codeShow:true
     }
   },
   components:{
@@ -115,7 +116,10 @@ export default {
                let payImg = res.data.outData.codeImgUrl;
                this.payImg = payImg;
                this.payUrl = payUrl;
-               this.qrcode();
+               if(this.codeShow){
+                 this.qrcode();
+               }
+               this.codeShow = false;
            }else if(res.data &&  res.data.code == "-1"){
                Toast(res.data.message);
            }

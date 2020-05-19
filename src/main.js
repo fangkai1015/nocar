@@ -20,8 +20,9 @@ if(ENV === 'development'){
 axios.interceptors.response.use(
   response => {
     if(response.data.code == 9){
-      let hostname = window.location.hostname;
-      window.location.href = 'http://' + hostname + '/mine/login2.shtml';
+      let host = window.location.host,
+        protocol = window.location.protocol;
+      window.location.href = protocol +'//'+ host + '/mine/login2.shtml';
     }
     return response;
 },
@@ -29,8 +30,9 @@ error => {
 if (error.response) {
   switch (error.response.status) {
     case 401:
-      let hostname = window.location.hostname;
-      window.location.href = 'http://' + hostname + '/mine/login2.shtml';
+      let host = window.location.host,
+        protocol = window.location.protocol;
+      window.location.href = protocol +'//'+ host + '/mine/login2.shtml';
   }
 }
 });

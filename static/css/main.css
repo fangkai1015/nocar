@@ -114,22 +114,25 @@ body{
     padding-top: .2rem;
 }
 .insureList-tab{
-    margin-top: .2667rem;
-    height: .78rem;
+    margin-top: .1rem;
+    overflow: hidden;
 }
 .insureList-tab span{
-    display: inline-block;
+    float: left;
     font-size: .293rem;
-    color:#1769b2;
+    color:#999;
     padding: .053rem .133rem;
-    border:1px solid #1769b2;
+    border:1px solid #f0f0f0;
     border-radius: .053rem;
+    margin-top: 0.15rem;
+    background-color: #f0f0f0;
 }
 .insureList-tab span:not(:last-child){
-    margin:0 .3rem 0 0;
+    margin:0.15rem .3rem 0 0;
 }
 .insureList-action{
     position: relative;
+    margin-top: .267rem;
 }
 .insureList-money{
     font-size: .3467rem;
@@ -144,15 +147,11 @@ body{
     position: absolute;
     top: .1067rem;
     right: 0;
-    width: 2rem;
     height: .6667rem;
     line-height: .6667rem;
     text-align: center;
-    font-size: .3467rem;
-    border-radius: .3333rem;
-    background: linear-gradient(to right,#69afef,#196bb4);
-    color:#fff;
-}
+    font-size: .4rem;
+    border-radius: .3333rem;}
 .insureList-none{
    position: relative;
    margin-top: .5333rem;
@@ -305,7 +304,7 @@ body{
 }
 .insure-detail{
     position: relative;
-    padding-bottom:2.8rem;
+    padding-bottom:1.5rem;
     margin-top:1.093rem;
 }
 .insureDetailWraper{
@@ -415,7 +414,7 @@ body{
 }
 .plan-allMoney span{
     font-size: .72rem;
-    margin-left: .133rem;
+    margin:0 .03rem 0 .133rem;
 }
 .plan-btn{
     float: right;
@@ -442,6 +441,10 @@ body{
     padding:0 .4rem;
     border-bottom: 1px solid #e5e5e5;
     font-size: .427rem;
+}
+.produce-main{
+    color:#666;
+    font-size: .373rem;
 }
 .produce-main img{
     display: block;
@@ -534,9 +537,9 @@ body{
     z-index: 10;
 }
 .detail-agress{
-    line-height: 1.2rem;
+    line-height: 0.6rem;
     font-size: .373rem;
-    padding:0 0.4rem;
+    padding:0.2rem 0.4rem;
 }
 .detail-agress a{
     color:#3676b8;
@@ -584,7 +587,7 @@ body{
 }
 .footer-bf span{
     font-size: .72rem;
-    margin-left: .08rem;
+    margin:0 .03rem 0 .08rem;
 }
 .tb-btn{
     position: absolute;
@@ -769,11 +772,9 @@ body{
 }
 .weebox-list li{
     position: relative;
-    line-height: 1.333rem;
+    padding: 0.4rem 0;
     border-bottom: 1px solid #e5e5e5;
     font-size: .453rem;
-    height: 1.333rem;
-    overflow: hidden;
 }
 .weebox-list li a{
     color: #333;
@@ -1225,7 +1226,7 @@ body{
     margin-left: .133rem;
 }
 .insureIntro-con{
-    padding:1.093rem 0 1.8rem;
+    padding:1.093rem 0 3.1rem;
 }
 .insureIntro-box{
     margin-top: .213rem;
@@ -1556,8 +1557,11 @@ body{
     top:1.093rem;
     left:0;
     right:0;
+    bottom: 0;
     background: #ffffff;
-    padding-bottom:0.533rem ;
+    padding-bottom:1.8rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 .detail-topCont{
     position: relative;
@@ -1618,6 +1622,9 @@ body{
     color:#333333;
     height:0.667rem;
     line-height:0.667rem;
+}
+.insures-item .detailItem-tit{
+    width: 75%;
 }
 .detailItem-tit{
   float: left;
@@ -1765,6 +1772,7 @@ body{
     display: block;
     width: 100%;
     border-radius: .267rem .267rem 0 0;
+    height: 3.467rem;
 }
 .produce-name{
     padding-left:.4rem;
