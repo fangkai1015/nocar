@@ -67,6 +67,11 @@ export default new Router({
       path: '/editShop',
       name: 'editShop',
       component: resolve=>require(["@/pages/editShop"],resolve)
+    },
+    {
+      path: '/renewList',
+      name: 'renewList',
+      component: resolve=>require(["@/pages/renewList"],resolve)
     }
   ]
 })

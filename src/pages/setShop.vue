@@ -24,6 +24,8 @@
 import Vue from 'vue';
 import { Uploader } from 'vant';
 Vue.use(Uploader);
+import { Toast } from 'vant';
+Vue.use(Toast);
 import headerbox from '../components/headerbox'
 export default {
   name: 'setShop',
@@ -34,7 +36,8 @@ export default {
         return {
             insureTitle:'微店设置',
             shopLogo:'',
-            shopTitle:''
+            shopTitle:'',
+            shareCode:''
         }
     },
     methods: {
@@ -42,12 +45,25 @@ export default {
             // 此时可以自行将文件上传至服务器
             let fileFormData = new FormData();
             fileFormData.append('file', file.file);
+            Toast.loading({
+                message: '上传中...',
+                forbidClick: true,
+                loadingType: 'spinner',
+                duration: 0
+            });
             this.$ajax.post('/insurance/api/weidian/saveOrUpdateWeidianLogo',fileFormData,{headers: {'Content-Type': 'multipart/form-data'}})
             .then((res)=>{
+                Toast.clear();
                 if(res.data &&  res.data.code === 1){
-                    this. shopLogo =  res.data.outData.wdLogo;
-                }
+                    this.shopLogo =  res.data.outData.wdLogo;
+                }else{
+                    Toast(res.data.message)
+              }
             })
+            .catch((error)=>{
+                Toast.clear();
+                Toast(res.data.message)
+          })
         },
          //微店信息
         shopIntro(){
@@ -58,6 +74,7 @@ export default {
             .then((res)=>{
                 if(res.data &&  res.data.code === 1){
                     this.shopLogo = res.data.outData.wdLogo;
+                    this.shareCode =  res.data.shareCode;
                     let name;
                     if(res.data.outData.wdName){
                         name = res.data.outData.wdName;
@@ -75,7 +92,7 @@ export default {
         },
         enterShop(){
              //进入我的微店
-            this.$router.push({path: '/myShop'});
+            this.$router.push({path: '/myShop?uuid='+encodeURIComponent(this.shareCode)});
         },
         editShop(){
             //进入微店名称修改

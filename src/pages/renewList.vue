@@ -1,8 +1,6 @@
 <template>
 <section class="order-content">
-    <headerbox :titleName="orderTitle">
-        <span class="insure-renew" slot="renew" @click="renewEnter">续保管理</span>
-    </headerbox>
+    <headerbox :titleName="orderTitle"></headerbox>
     <div class="orderSelectWrapper">
         <div class="orderSelectTab">
             <div v-for="tabName in tabNames" :key="tabName.status" :class="{'on':tabIndex == tabName.status}" @click.stop="tabGo(tabName.status)">{{tabName.name}}</div>
@@ -15,9 +13,6 @@
                     <div class="left-des">
                         <div class="insurance-name">{{orderContent.proname}}</div>
                     </div>
-                    <div class="right-des">
-                        <div class="status-name" :class="colorData[index]">{{orderStatus[index]}}</div>
-                    </div>
                 </div>
                 <div class="insurance-items">
                     <div class="insurance-item">被保人：{{orderContent.assured}}</div>
@@ -29,7 +24,6 @@
                 </div>
                 <div class="operate-btns">
                     <div class="check-order" @click="orderEnter(orderContent.billid)">订单详情</div>
-                    <div class="can-pay" v-if="orderStatus[index] == '待支付'" @click="toPay(orderContent.billid)">立即支付</div>
                 </div>
             </div>
         </van-list>
@@ -47,15 +41,15 @@ import headerbox from '../components/headerbox';
 import { Toast } from 'vant';
 Vue.use(Toast);
 export default {
-  name: 'orderList',
+  name: 'renewList',
    components:{
         'headerbox': headerbox
    },
     data () {
         return {
-            orderTitle:'非车订单',
-            tabIndex:0,
-            tabNames:[{name:'全部',status:0},{name:'待核保',status:1},{name:'待支付',status:2},{name:'已支付',status:3},{name:'已承保',status:4},{name:'核保失败',status:6},{name:'已失效',status:9}],
+            orderTitle:'续保管理',
+            tabIndex:1,
+            tabNames:[{name:'3天内',status:1},{name:'7天内',status:2},{name:'15天内',status:3},{name:'30天内',status:4}],
             orderContents:[],
             orderContentAll:[],
             orderStatus:[],
@@ -64,8 +58,7 @@ export default {
             totalPage:1,
             page:1,
             time:'',
-            empty:false,
-            colorData:[]
+            empty:false
         }
     },
     methods: {
@@ -74,13 +67,10 @@ export default {
           this.tabIndex = status;
           this.orderContentAll = [];
           this.orderStatus =[];
-          this.colorData = [];
           this.finished = false;
           this.tabContent();
       },
       tabContent(){
-          this.$store.commit('updateCode','')
-        this.$ajax.defaults.headers.common['visitCode'] = this.$store.state.code;
           this.empty = false;
           clearTimeout(this.time);
           this.time = setTimeout(() => {
@@ -88,9 +78,10 @@ export default {
             method:'post',
             url:'/insurance/api/order/queryUserBillListByKeys',
             data:{
-                billState:this.tabIndex,
+                billState:4,
                 limit: 10,
-                page: this.page
+                page: this.page,
+                renewalFlag:this.tabIndex
             }
           })
           .then((res)=>{
@@ -104,31 +95,24 @@ export default {
                   switch(data.billstate){
                     case 1:
                         this.orderStatus.push('待核保');
-                        this.colorData.push('red-color');
                         break;
                     case 2:
                         this.orderStatus.push('待支付');
-                        this.colorData.push('red-color');
                         break;
                     case 3:
                         this.orderStatus.push('已支付');
-                        this.colorData.push('green-color');
                         break;
                     case 4:
                         this.orderStatus.push('已承保');
-                        this.colorData.push('green-color');
                         break;
                     case 5:
                         this.orderStatus.push('被拒保');
-                        this.colorData.push('red-color');
                         break;
                     case 6:
                         this.orderStatus.push('核保失败');
-                        this.colorData.push('red-color');
                         break;
                     case 9:
                         this.orderStatus.push('已失效');
-                        this.colorData.push('orange-color');
                         break;
                 }
               })
@@ -154,14 +138,6 @@ export default {
       orderEnter(billid){
           //进入订单详情
           this.$router.push({path: '/orderDetail',query:{ id:billid}});
-      },
-      toPay(billId){
-         //进入支付页面
-         this.$router.push({path: '/pay',query:{ billId:billId}});
-       },
-       //进入续保管理
-      renewEnter(){
-          this.$router.push({path: '/renewList'});
       }
     },
     mounted () {

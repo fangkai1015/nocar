@@ -7,12 +7,12 @@ Vue.use(Vuex)
 //创建VueX对象
 export default new Vuex.Store({
     state:{
-        healthContent:'',//健康告知内容
+        code:'',//用户编码
         productContent:{}//产品信息传值
     },
     mutations:{
-        updateHealth(state,healthChange){
-            state.healthContent = healthChange
+        updateCode(state,codeChange){
+            state.code = codeChange
         },
         updateProduct(state,productChange){
             state.productContent = productChange

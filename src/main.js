@@ -6,6 +6,7 @@ import router from './router'
 import store from './store'
 import axios from 'axios'
 import wx from 'weixin-js-sdk'
+import '../static/css/main.css'
 Vue.prototype.$ajax = axios
 Vue.prototype.wx = wx
 Vue.config.productionTip = false
@@ -15,7 +16,6 @@ if(ENV === 'development'){
 }else if(ENV === 'production'){
   axios.defaults.baseURL = ''
 }
-
 // http response 拦截器
 axios.interceptors.response.use(
   response => {

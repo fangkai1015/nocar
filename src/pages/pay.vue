@@ -100,8 +100,9 @@ export default {
        Toast.loading({
           message: '正在生成支付二维码...',
           forbidClick: true,
-          loadingType: 'spinner'
-      });
+          loadingType: 'spinner',
+          duration: 0
+        });
        var payRequestUrl = '/insurance/api/pay/qrPayment?billId='+billId;
        this.$ajax({
           headers: { 'Content-Type': 'application/x-www-form-urlencoded'},
@@ -109,8 +110,8 @@ export default {
           url:payRequestUrl
         })
         .then((res)=>{
+            Toast.clear();
            if(res.data &&  res.data.code == 1){
-              Toast.clear();
                this.showQrCode = true;
                let payUrl = res.data.outData.codeUrl;
                let payImg = res.data.outData.codeImgUrl;

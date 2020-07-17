@@ -1,6 +1,6 @@
 <template>
   <section class="insure-con">
-        <header class="insure-title">非车险产品</header>
+        <header class="insure-title">非车险产品<span class="openFei" :class="{'closeFei':feiShow}" @click="feiAct"></span></header>
         <div class="banner-box">
             <img src="../../static/image/banner.jpg" alt="非车险种">
         </div>
@@ -29,7 +29,7 @@
                           </div>
                           <div class="insureList-action">
                               <div class="insureList-money"><span>{{product.price}}</span>元起</div>
-                              <div class="insureList-btn" v-if="product.isShowFees == '1'">手续费{{product.commissionRate}}</div>
+                              <div class="insureList-btn" v-if="product.isShowFees == '1'" v-show="sxShow">手续费{{product.commissionRate}}</div>
                           </div>
                         </div>
                     </li>
@@ -75,7 +75,10 @@ export default {
       images: [],
       prodTypes:[],
       products:[],
-      active:0
+      active:0,
+      feiShow:false,
+      sxShow:true,
+      shareCode:''
     }
   },
   methods:{
@@ -84,6 +87,15 @@ export default {
         let host = window.location.host,
         protocol = window.location.protocol;
         window.location.href = protocol +'//'+ host + url;
+      },
+      feiAct(){
+        if(this.feiShow){
+          this.feiShow = false;
+          this.sxShow = true;
+        }else{
+          this.feiShow = true;
+          this.sxShow = false;
+        }
       },
       //获取轮播图
       getBanners(){
@@ -133,6 +145,7 @@ export default {
         .then((res)=>{
             if(res.data &&  res.data.code == "1"){
                 this.products =  res.data.outData.products;
+                this.shareCode = res.data.shareCode;
             }
 
 
@@ -147,11 +160,14 @@ export default {
 
       },
       toInsure(productId){
+        let uuid = encodeURIComponent(this.shareCode);
         //进入投保页面
-        this.$router.push({path: `/detail/${productId}`});
+        this.$router.push({path: `/detail/${productId}?uuid=${uuid}`});
       }
   },
   mounted() {
+    this.$store.commit('updateCode','');
+    this.$ajax.defaults.headers.common['visitCode'] = this.$store.state.code;
     this.getBanners();
     this.getProductTypes();
     this.queryInsureList('');

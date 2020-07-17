@@ -16,8 +16,9 @@
             <div class="detail-item"><div class="detailItem-tit">订单号：</div><div  class="detailItem-val">{{billInfo.billCode || '暂无'}}</div></div>
             <div class="detail-item"><div class="detailItem-tit">生效日期：</div><div  class="detailItem-val">{{billInfo.enableDate}}</div></div>
             <div class="detail-item"><div class="detailItem-tit">终止日期：</div><div  class="detailItem-val">{{billInfo.disEnableDate}}</div></div>
-            <div class="detail-item"><div class="detailItem-tit">缴费期限：</div><div  class="detailItem-val">{{billInfo.payTime}}</div></div>
+            <!-- <div class="detail-item"><div class="detailItem-tit">缴费期限：</div><div  class="detailItem-val">{{billInfo.payTime}}</div></div> -->
             <div  class="detail-item"><div class="detailItem-tit">支付金额：</div><div  class="detailItem-val">{{billInfo.premium}}元</div></div>
+            <div  class="detail-item"><div class="detailItem-tit">购买份数：</div><div  class="detailItem-val">{{billInfo.num}}份/人</div></div>
         </div>
         <div class="person-info" v-for="billAssuredList in orderDetails.billAssuredList" :key="billAssuredList.id">
             <div class="person-tit">被保人信息</div>
@@ -38,12 +39,14 @@
         </div>
     </div>
     <div v-if="stateCode == 2" class="pay-btn" @click="toPay(billInfo.billId)">去支付</div>
-
+    <div class="pay-btn" @click="renewPay" v-if="renewShow">一键续保</div>
 </section>
 </template>
 <script>
 import headerbox from '../components/headerbox'
 import Vue from 'vue';
+import { Toast } from 'vant';
+Vue.use(Toast);
 import { Icon } from 'vant';
 Vue.use(Icon);
 export default {
@@ -60,7 +63,8 @@ export default {
             orderStatus:'',
             productShow:false,
             stateCode:'',
-            timer: ''
+            timer: '',
+            renewShow:false
         }
     },
     inject:['reload'],
@@ -68,6 +72,34 @@ export default {
       returnHome(){
            this.$router.push({path: '/'});
         },
+      renewPay(){
+        Toast.loading({
+          message: '续保中...',
+          forbidClick: true,
+          loadingType: 'spinner',
+          duration: 0
+        });
+        this.$ajax({
+            method:'post',
+            url:'/insurance/api/order/insBillRenewal',
+            params:{
+              billId:this.$route.query.id
+            }
+          })
+          .then((res)=>{
+            Toast.clear();
+            if(res.data &&  res.data.code === 1){
+               let orderId = res.data.outData.data.id;
+              this.$router.push({path: '/orderDetail',query:{ id:orderId}});
+              this.reload();
+            }else{
+              Toast(res.data.message)
+            }
+          })
+          .catch((error)=>{
+            Toast(res.data.message)
+          })
+      },
       orderIntro(){
           this.$ajax({
             method:'post',
@@ -109,6 +141,9 @@ export default {
                 }
                 if(this.orderDetails.productContentList.length > 0){
                     this.productShow = true;
+                }
+                if(this.billInfo.renewalFlag == 1 && this.billInfo.disEnableDateRange <= 30 && this.billInfo.disEnableDateRange > 0 && this.stateCode == 4){
+                  this.renewShow = true
                 }
             }
           })

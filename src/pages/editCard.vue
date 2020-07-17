@@ -20,6 +20,10 @@
                     <div class="modify-tit">公司名称</div>
                     <div class="modify-val"><input type="text" class="modifyVal-input" v-model="companyName" v-blur/></div>
                 </div>
+                <div class="modify-line">
+                    <div class="modify-tit">执业证编号</div>
+                    <div class="modify-val"><input type="text" class="modifyVal-input" v-model="occupationCode" v-blur/></div>
+                </div>
                 <div class="confirm-btn" @click="cardOk">确定</div>
             </div>
         </div>       
@@ -43,7 +47,8 @@ export default {
             userName:'',
             companyName:'',
             phone:'',
-            wxCon:''
+            wxCon:'',
+            occupationCode:''
         }
     },
     methods: {
@@ -60,6 +65,7 @@ export default {
                     this.companyName = this.userContent.callingInfo.company || '燕赵财产保险股份有限公司';
                     this.phone = this.userContent.callingInfo.mobile || this.userContent.username;
                     this.wxCon = this.userContent.callingInfo.wxAccount || '';
+                    this.occupationCode = this.userContent.callingInfo.occupationCode || '';
                 }
             })
             .catch((error)=>{
@@ -91,7 +97,11 @@ export default {
                 return;
             }
             if(this.companyName === ''){
-                 Toast('公司名称不能为空');
+                Toast('公司名称不能为空');
+                return;
+            }
+            if(this.occupationCode === ''){
+                Toast('执业证编号不能为空');
                 return;
             }
             //编辑用户名片信息
@@ -102,7 +112,8 @@ export default {
                     company: this.companyName,
                     mobile: this.phone,
                     name: this.userName,
-                    wxAccount: this.wxCon
+                    wxAccount: this.wxCon,
+                    occupationCode:this.occupationCode
                 }
             })
             .then((res)=>{

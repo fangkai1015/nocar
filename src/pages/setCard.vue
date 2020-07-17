@@ -11,6 +11,8 @@
                 </div>
                 <div class="card-weixin">{{wxCon}}</div>
                 <div class="to-shop" @click="enterShop">进店逛逛</div>
+                <div class="card-occupation">执业证编号</div>
+                <div class="card-number">{{occupation}}</div>
             </div>
         </div>
         
@@ -30,7 +32,9 @@ export default {
             userName:'',
             companyName:'',
             phone:'',
-            wxCon:''
+            wxCon:'',
+            occupation:'',
+            shareCode:''
         }
     },
     methods: {
@@ -47,6 +51,8 @@ export default {
                     this.companyName = this.userContent.callingInfo.company || '燕赵财产保险股份有限公司';
                     this.phone = this.userContent.callingInfo.mobile || this.userContent.username;
                     this.wxCon = this.userContent.callingInfo.wxAccount || '暂无';
+                    this.occupation =  this.userContent.callingInfo.occupationCode || '请编辑执业证编号';
+                    this.shareCode = this.userContent.shareCode;
                 }
             })
             .catch((error)=>{
@@ -54,8 +60,8 @@ export default {
             })
         },
         enterShop(){
-            //进入我的微店
-            this.$router.push({path: '/myShop'});
+           //进入我的微店
+            this.$router.push({path: '/myShop?uuid='+encodeURIComponent(this.shareCode)});
         },
         editCard(){
             //进入名片设置

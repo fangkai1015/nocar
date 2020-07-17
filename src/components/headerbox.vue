@@ -4,6 +4,7 @@
           <h3 class="insure-subtitle">{{titleName}}</h3>
           <slot name="collect"></slot>
           <slot name="home"></slot>
+          <slot name="renew"></slot>
     </header>
 </template>
 

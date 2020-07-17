@@ -20,14 +20,24 @@
                 <div class="plan-title">保障计划</div>
                 <div class="plan-more" @click="planMore(select)">查看详情<van-icon name="arrow" /></div>
                 <div class="plan-tab">
-                    <div class="planTab-box" v-for="(combo,index) in combos" :key="combo.comboId" :class="{select:select==index}" @click="toggleTab(index,combo.comboId,combo.viewPrice,combo.priceCalcuFlag)" v-show="tabShow">{{combo.comboName}}</div>
+                    <div class="planTab-box" v-for="(combo,index) in combos" :key="combo.comboId" :class="{select:select==index}" @click="toggleTab(index,combo)" v-show="tabShow">{{combo.comboName}}</div>
                 </div>
                 <div class="plan-main" v-for="(combo,index) in combos" :key="combo.comboId" v-show="select==index">
                     <div class="plan-item">
-                        <div class="plan-list" v-for="content in combo.contents" :key="content.contentId"><div class="plan-left">{{content.contentName}}</div><div class="plan-money">{{content.price}}</div></div>
+                        <div class="plan-list" v-for="(content,index) in combo.contents" :key="content.contentId"><div class="plan-left">{{content.contentName}}</div>
+                        <div class="plan-money" v-if="!combo.dynamicCoverageFlag || JSON.parse(content.coverInfo).length == 1">{{content.price}}</div>
+                        <div class="plan-money" v-else>
+                            <select class="plan-select" v-if="priceCalcuFlag" v-model="priceList1[index]" @change="priceBl(combo,index)">
+                                <option :value="coverInfo.premium" v-for="(coverInfo,index) in JSON.parse(content.coverInfo)" :key="index">{{coverInfo.price}}</option>
+                            </select>
+                            <select class="plan-select" v-else @change="priceBz(combo,index)" v-model="priceList[index]">
+                                <option :value="coverInfo.premium" v-for="(coverInfo,index) in JSON.parse(content.coverInfo)" :key="index">{{coverInfo.price}}</option>
+                            </select>
+                        </div>
+                    </div>
                     </div>
                     <div class="plan-jb">
-                        <div class="plan-allMoney" v-if="priceCalcuFlag">¥<span>{{priceNew}}</span>起</div>
+                        <div class="plan-allMoney" v-if="priceCalcuFlag && !dynamicCoverageFlag">¥<span>{{priceNew}}</span>起</div>
                         <div class="plan-allMoney" v-else>¥<span>{{priceNew}}</span></div>
                         <div class="plan-btn" @click="toConfirmInsure">立即投保</div>
                     </div>
@@ -91,7 +101,7 @@
         <footer class="detail-footer">
             <!-- <div class="detail-agress"><i class="agress-btn"  :class="{'agress-yes':agressYes}" @click="agressAct"></i><span>我已确认并同意及理解<a href="javascript:;"  @click = "selectLookInfo(2)">《投保须知》</a><a href="javascript:;" @click="tbOpen">《投保声明》</a><a href="javascript:;" @click="insureRules">《保险条款》</a><a href="javascript:;" @click="pdfOpen(jobData.docLink,jobData.docName)" v-if="jobShow">《职业类别分类表》</a>内容</span></div> -->
             <div class="footer-content">
-                <div class="footer-bf" v-if="priceCalcuFlag">¥<span>{{priceNew}}</span>起</div>
+                <div class="footer-bf" v-if="priceCalcuFlag && !dynamicCoverageFlag">¥<span>{{priceNew}}</span>起</div>
                 <div class="footer-bf" v-else>¥<span>{{priceNew}}</span></div>
                 <div class="tb-btn" @click="toConfirmInsure">立即投保</div>
                 <div class="tb-share" @click="shareTip">
@@ -182,7 +192,7 @@
                 <div class="tbSure-item" v-if="ageBelong">
                     <div class="tbSure-label">被保人年龄：</div>
                     <div class="tbSure-right">
-                       <span class="tbSure-btn" v-for="(ageIntro,index) in ageList" :key="index" :class="{'btn-current':select2==index}" @click="sel2(index,ageIntro.view_age_belong)">{{ageIntro.view_age_belong}}</span>
+                       <span class="tbSure-btn" v-for="(ageIntro,index) in ageList" :key="index" :class="{'btn-current':select2==index}" @click="sel2(index,ageIntro.view_age_belong,ageIntro.ageLimit)">{{ageIntro.view_age_belong}}</span>
                     </div>
                 </div>
                 <div class="tbSure-item" v-if="sexShow">
@@ -290,6 +300,7 @@ export default {
       numPages:'',//pdf页数
       tbShow:false,//投保声明
       priceCalcuFlag:true,//保费对比是否显示
+      dynamicCoverageFlag:false,//保障项目是否多项选择
       health:false,//需健康告知提示
       priceId:'',//价格id号
       fixBg:false,
@@ -297,7 +308,12 @@ export default {
       planShow:false,
       ensureCon:[],
       jobShow:false,
-      jobData:{}
+      jobData:{},
+      ageLimit:[],
+      priceList:[],
+      priceList1:[],
+      dutyVoList:[],//保障项目多选列表
+      dutyVoList1:[]//保障项目多选且联动列表
     }
   },
   components:{
@@ -305,14 +321,104 @@ export default {
         'pdf':pdf
    },
   methods:{
+      priceBz(con,num){
+          let atr = {};
+          con.contents.map((data,i) => {
+              let coverInfoV = JSON.parse(data.coverInfo);          
+            coverInfoV.map((val,index) => {
+               if(i == num){
+                   if(this.priceList[i] == val.premium){
+                       atr = {
+                           'contentCode':data.contentCode,
+                           'dutyCode':val.dutyCode,
+                           'aclPrice':val.aclPrice
+                       }
+                   }
+               }                
+            })
+
+          })
+          this.dutyVoList.splice(num,1,atr);
+           this.priceNew = 0;
+           this.priceAll = 0;
+          this.priceList.map((data,i) => {
+              this.priceNew += data;
+              this.priceAll += data;
+          })
+      },
+      priceBl(con,num){
+          let atr = {};
+          con.contents.map((data,i) => {
+              let coverInfoV = JSON.parse(data.coverInfo);          
+            coverInfoV.map((val,index) => {
+               if(i == num){
+                   if(this.priceList1[i] == val.premium){
+                       atr = {
+                           'contentCode':data.contentCode,
+                           'dutyCode':val.dutyCode,
+                           'aclPrice':val.aclPrice
+                       }
+                   }
+               }                
+            })
+
+          })
+          this.dutyVoList1.splice(num,1,atr);
+          this.priceChange();
+      },
       //tab切换
-      toggleTab(index,comboId,price,priceCalcuFlag){
+      toggleTab(index,combo){
           this.select=index;
-          this.priceAll = price;
-          this.priceNew = price;
-          this.priceCalcuFlag = priceCalcuFlag;
-          this.comboId = comboId;
-          this.insureIntro(comboId);
+          this.priceAll = combo.viewPrice;
+          this.priceNew = combo.viewPrice;
+          this.priceCalcuFlag = combo.priceCalcuFlag;
+          this.dynamicCoverageFlag = combo.dynamicCoverageFlag;
+          this.comboId = combo.comboId;
+          //点击进入初始默认保障项目
+        //   if(!combo.priceCalcuFlag && combo.dynamicCoverageFlag){
+        //       this.priceNew = 0;
+        //       this.priceAll = 0;
+        //       this.priceList.map((data,i) => {
+        //       this.priceNew += data;
+        //       this.priceAll += data;
+        //   })
+        //   }
+        if(combo.dynamicCoverageFlag && !combo.priceCalcuFlag){//保障项目多选且不联动
+            this.dutyVoList = [];
+            combo.contents.map((val,i) => {
+                    let dutyVo = {};
+                dutyVo.contentCode = val.contentCode;
+                    let coverInfoVal = JSON.parse(val.coverInfo)
+                    coverInfoVal.map((info,i) => {
+                        if(val.aclPrice == info.aclPrice){
+                            this.priceList.push(info.premium);
+                        dutyVo.dutyCode = info.dutyCode;
+                        dutyVo.aclPrice = info.aclPrice;
+                        this.dutyVoList.push(dutyVo);
+                        }
+                    })
+            })
+        }
+         if(combo.dynamicCoverageFlag && combo.priceCalcuFlag){//保障项目多选且联动
+            this.dutyVoList1 = [];
+            combo.contents.map((val,i) => {
+                    let dutyVo = {};
+                dutyVo.contentCode = val.contentCode;
+                    let coverInfoVal = JSON.parse(val.coverInfo)
+                    coverInfoVal.map((info,i) => {
+                        if(val.aclPrice == info.aclPrice){
+                            this.priceList1.push(info.premium);
+                        dutyVo.dutyCode = info.dutyCode;
+                        dutyVo.aclPrice = info.aclPrice;
+                        this.dutyVoList1.push(dutyVo);
+                        }
+                    })
+            })
+         }
+          if(combo.dynamicCoverageFlag){
+              this.dynamicCoverageFlag = true;
+          }
+          this.insureIntro(combo.comboId);
       },
       //保障详情
       planMore(index){
@@ -381,6 +487,17 @@ export default {
             Toast('请先确认协议再投保');
             return;
         }
+        let dutyVal = [];
+        if(this.dynamicCoverageFlag && !this.priceCalcuFlag){
+            if(this.priceAll == 0){
+                Toast('价格为零无法进行投保');
+                return;
+            }
+            dutyVal = this.dutyVoList
+        }
+        if(this.dynamicCoverageFlag && this.priceCalcuFlag){
+            dutyVal = this.dutyVoList1
+        }
         let productIntro = {
               comboId: this.comboId,
               eleView1: this.eleView1,
@@ -389,11 +506,13 @@ export default {
               sex: this.sex,
               viewAgeBelong: this.viewAgeBelong,
               viewTime: this.viewTime,
-              priceId: this.priceId
+              priceId: this.priceId,
+              dutyVoList:dutyVal
           }
         let productPrice = {
             priceAll:this.priceAll,
-            priceCalcuFlag:this.priceCalcuFlag
+            priceCalcuFlag:this.priceCalcuFlag,
+            ageBelong:this.ageBelong
         }
         localStorage.setItem('productVal',JSON.stringify(productIntro));
         localStorage.setItem('productPrice',JSON.stringify(productPrice));
@@ -403,7 +522,7 @@ export default {
         }else if(this.health){
             //进入健康告知页面
             this.$router.push({path: '/health',query:{ id:this.$route.params.id}});
-        }else{         
+        }else{
           //进入填写投保信息页面
           this.$router.push({path: '/insureIntro',query:{ id:this.$route.params.id}});
         }
@@ -414,6 +533,17 @@ export default {
             Toast('未匹配到价格无法进行投保');
             return;
         }
+        let dutyVal = [];
+        if(this.dynamicCoverageFlag && !this.priceCalcuFlag){
+            dutyVal = this.dutyVoList
+        }
+        if(this.dynamicCoverageFlag && this.priceCalcuFlag){
+            if(this.priceAll == 0){
+                Toast('价格为零无法进行投保');
+                return;
+            }
+            dutyVal = this.dutyVoList1
+        }
         let productIntro = {
                 comboId: this.comboId,
                 eleView1: this.eleView1,
@@ -422,18 +552,21 @@ export default {
                 sex: this.sex,
                 viewAgeBelong: this.viewAgeBelong,
                 viewTime: this.viewTime,
-                priceId: this.priceId
+                priceId: this.priceId,
+                dutyVoList:dutyVal
             }
         let productPrice = {
             priceAll:this.priceAll,
-            priceCalcuFlag:this.priceCalcuFlag
+            priceCalcuFlag:this.priceCalcuFlag,
+            ageBelong:this.ageBelong,
+            ageLimit:this.ageLimit
         }
         localStorage.setItem('productVal',JSON.stringify(productIntro));
         localStorage.setItem('productPrice',JSON.stringify(productPrice));
         if(this.health){
             //进入健康告知页面
             this.$router.push({path: '/health',query:{ id:this.$route.params.id}});
-        }else{        
+        }else{
         //进入填写投保信息页面
           this.$router.push({path: '/insureIntro',query:{ id:this.$route.params.id}});
         }
@@ -517,9 +650,10 @@ export default {
         this.priceChange(time,'','','','')
     },
     //年纪选择
-    sel2(index,age){
+    sel2(index,age,ageLimit){
         this.select2 = index;
         this.viewAgeBelong = age;
+        this.ageLimit = ageLimit;
         this.priceChange('',age,'','','')
     },
     //性别选择
@@ -574,6 +708,7 @@ export default {
       this.active  = index;
       var arrDom = document.getElementsByClassName("contentItem");
       document.documentElement.scrollTop = arrDom[index -1].offsetTop;
+      document.body.scrollTop = arrDom[index -1].offsetTop;
     },
     //查询产品详情
     queryProductDetail(id){
@@ -611,17 +746,51 @@ export default {
                       this.jobData = data
                   }
               })
+              if(this.combos.length > 1){
+                  this.tabShow = true;
+              }
               this.combos.map((data,i) =>{
                   if(i === 0){
                       this.comboId = data.comboId
                      this.insureIntro(this.comboId);
                      this.priceAll = data.viewPrice;
                      this.priceNew = data.viewPrice;
-                     this.priceCalcuFlag = data.priceCalcuFlag;                  }
+                     this.priceCalcuFlag = data.priceCalcuFlag;
+                     if(data.dynamicCoverageFlag){
+                         this.dynamicCoverageFlag = true;
+                     }
+                     if(data.dynamicCoverageFlag && !data.priceCalcuFlag){//保障项目多选且不联动 
+                        data.contents.map((val,i) => {
+                            let dutyVo = {};
+                            dutyVo.contentCode = val.contentCode;
+                            let coverInfoVal = JSON.parse(val.coverInfo);
+                            coverInfoVal.map((info,i) => {
+                                if(val.aclPrice == info.aclPrice){
+                                    this.priceList.push(info.premium);
+                                    dutyVo.dutyCode = info.dutyCode;
+                                    dutyVo.aclPrice = info.aclPrice;
+                                    this.dutyVoList.push(dutyVo);
+                                }
+                            })
+                        })   
+                    }
+                    if(data.dynamicCoverageFlag && data.priceCalcuFlag){//保障项目多选且联动
+                        combo.contents.map((val,i) => {
+                                let dutyVo = {};
+                            dutyVo.contentCode = val.contentCode;
+                                let coverInfoVal = JSON.parse(val.coverInfo)
+                                coverInfoVal.map((info,i) => {
+                                    if(val.aclPrice == info.aclPrice){
+                                        this.priceList1.push(info.premium);
+                                    dutyVo.dutyCode = info.dutyCode;
+                                    dutyVo.aclPrice = info.aclPrice;
+                                    this.dutyVoList1.push(dutyVo);
+                                    }
+                                })
+                        })
+                    }           
+                }
               })
-              if(this.combos.length > 1){
-                  this.tabShow = true;
-              }
               //收藏显示
               if(res.data.outData.collectFlag){
                   this.collectOk = true;
@@ -648,6 +817,10 @@ export default {
                  this.eleView1 = this.defaulePrice.eleView1 || '';
                  this.eleView2 = this.defaulePrice.eleView2 || '';
                  this.comboId = this.defaulePrice.comboId;
+                 this.priceId = this.defaulePrice.id;
+                 if(this.priceCalcuFlag && this.dynamicCoverageFlag){
+                    this.priceChange();
+                }
                  //保障期限
                  if(res.data.outData.insureTimeList){
                      this.insureTime = true;
@@ -667,6 +840,7 @@ export default {
                      this.ageList.map((data,i) => {
                          if(data.view_age_belong == this.defaulePrice.viewAgeBelong){
                              this.select2 = i;
+                             this.ageLimit = data.ageLimit;
                          }
                      })
                  }else{
@@ -722,6 +896,10 @@ export default {
         sex = sex || this.sex;
         ele1 = ele1 || this.eleView1;
         ele2 = ele2 || this.eleView2;
+        let dutyVoList = [];
+        if(this.dynamicCoverageFlag && this.priceCalcuFlag){
+            dutyVoList = this.dutyVoList1;
+        }
         this.$ajax({
             method:'post',
             url:'/insurance/api/insure/findProductPriceByKeys',
@@ -732,7 +910,8 @@ export default {
                 viewAgeBelong:age,
                 sex:sex,
                 eleView1:ele1,
-                eleView2:ele2
+                eleView2:ele2,
+                dutyVoList:dutyVoList
             }
         })
         .then((res)=>{
@@ -741,6 +920,9 @@ export default {
                 if(priceCon){
                     this.priceAll =  priceCon.price;
                     this.priceId = priceCon.id;
+                    if(this.dynamicCoverageFlag && this.priceCalcuFlag){
+                        this.priceNew = priceCon.price;
+                    }
                 }else{
                      this.priceAll =  '';
                      this.priceId = '';
@@ -757,7 +939,7 @@ export default {
             method:'post',
             url:'/insurance/api/weidian/wxShare',
             params:{
-                url:window.location.href
+                url: location.href.split('#')[0]
             }
         })
         .then((res)=>{
@@ -771,48 +953,50 @@ export default {
     },
     //分享信息
     wxBox(data){
-        let shareTitle = '燕赵财险',
-            shareDesc = '燕赵财险为您提供一份保障、一份健康';
-        this.wx.config({
-        debug: false, 
-        appId: data.appId, // 必填，公众号的唯一标识
-        timestamp: data.timeStamp, // 必填，生成签名的时间戳
-        nonceStr: data.nonceStr, // 必填，生成签名的随机串
-        signature: data.signature,// 必填，签名
-        jsApiList: ['updateAppMessageShareData','updateTimelineShareData'] // 必填，需要使用的JS接口列表
-        });
-        this.wx.ready(function () { 
-            this.wx.updateAppMessageShareData({ 
-                title: shareTitle, // 分享标题
-                desc: shareDesc, // 分享描述
-                link: data.link, // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-                imgUrl: '../../static/image/company_logo.png', // 分享图标
-                success: function () {
-                // 设置成功
-                }
-            })
-            this.wx.updateTimelineShareData({ 
-                title: shareTitle, // 分享标题
-                link: data.link, // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-                imgUrl: '../../static/image/company_logo.png', // 分享图标
-                success: function () {
-                // 设置成功
-                }
-            })
-        });
+       wx.config({
+         debug: false,
+         appId: data.appId, // 必填，公众号的唯一标识
+         timestamp: data.timeStamp, // 必填，生成签名的时间戳
+         nonceStr: data.nonceStr, // 必填，生成签名的随机串
+         signature: data.signature,// 必填，签名
+         jsApiList: ["onMenuShareTimeline","onMenuShareAppMessage"]
+       });
+       let logoUrl = window.location.protocol + '//' + window.location.host + '/resources/images/share_img.png';
+       let shareWxLink = window.location.href.split('#')[0] + 'static/html/redirect.html?app3Redirect=' + encodeURIComponent(window.location.href);
+      // 微信分享的数据
+      var shareData = {
+        "title": "燕赵财险", // 分享标题
+        "desc": "燕赵财险为您提供一份保障、一份健康",
+        "link": shareWxLink,// 分享链接
+        "imgUrl": logoUrl,// 分享图标
+        success: function (res) {
+        },
+        cancel: function (res) {
+        },
+        fail: function (res) {
+        }
+      };
+       wx.ready(function () {
+          wx.onMenuShareTimeline(shareData);
+          wx.onMenuShareAppMessage(shareData);
+       });
     },
     userCheck(){
         if(this.$route.query.uuid){
-            let uuid = this.$route.query.uuid
+            let uuid = this.$route.query.uuid;
+            this.$store.commit('updateCode',decodeURIComponent(uuid))
+            this.$ajax.defaults.headers.common['visitCode'] = this.$store.state.code;
             this.$ajax({
                 method:'post',
                 url:'/insurance/api/user/queryShareSign',
                 headers: {
-                    'uuid': uuid
+                    'uuid': decodeURIComponent(uuid)
                 }
             })
             .then((res)=>{
                 if(res.data &&  res.data.code === 1){
+                    this.queryProductDetail(this.$route.params.id);
+                    this.wxShare();
                 }
             })
             .catch((error)=>{
@@ -823,8 +1007,6 @@ export default {
   },
   mounted () {
     window.addEventListener('scroll', this.handleScroll);
-    this.queryProductDetail(this.$route.params.id);
-    this.wxShare();
     this.userCheck();
   },
   destroyed(){

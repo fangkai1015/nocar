@@ -68,6 +68,12 @@
                     <li>
                         <span class="seek-icon3"></span><span class="seek-sum">{{wxCon}}</span>
                     </li>
+                    <li>
+                        <span class="seek-icon4"></span><span class="seek-sum">执业证编号</span>
+                    </li>
+                    <li class="occupationCode">
+                        <span class="seek-sum">{{occupationCode}}</span>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -100,7 +106,8 @@ export default {
             userName:'',//用户姓名
             companyName:'',//公司姓名
             phone:'',//手机号码
-            wxCon:''//微信号
+            wxCon:'',//微信号
+            occupationCode:''//执业证编号
         }
     },
     methods: {
@@ -109,6 +116,9 @@ export default {
             this.$router.push({path: '/'});
         },
         shopIntro(){
+            let uuid = this.$route.query.uuid
+            this.$store.commit('updateCode',decodeURIComponent(uuid))
+            this.$ajax.defaults.headers.common['visitCode'] = this.$store.state.code;
             this.$ajax({
                 method:'post',
                 url:'/insurance/api/weidian/weidianIndex'
@@ -177,6 +187,7 @@ export default {
                    this.companyName = this.userContent.callingInfo.company || '燕赵财产保险股份有限公司';
                    this.phone = this.userContent.callingInfo.mobile || this.userContent.username;
                    this.wxCon = this.userContent.callingInfo.wxAccount || '暂无';
+                   this.occupationCode = this.userContent.callingInfo.occupationCode || '暂无';
                 }
             })
             .catch((error)=>{
@@ -202,7 +213,12 @@ export default {
         },
         productEnter(productId){
              //进入投保页面
-            this.$router.push({path: `/detail/${productId}`});
+            if(this.$route.query.uuid) {
+              let uuid = encodeURIComponent(this.$route.query.uuid);
+              this.$router.push({path: `/detail/${productId}?uuid=${uuid}`});
+            }else{
+              this.$router.push({path: `/detail/${productId}`});
+            }
         },
         //分享接口
         wxShare(){
@@ -210,7 +226,7 @@ export default {
                 method:'post',
                 url:'/insurance/api/weidian/wxShare',
                 params:{
-                    url:window.location.href
+                    url:location.href.split('#')[0]
                 }
             })
             .then((res)=>{
@@ -224,34 +240,32 @@ export default {
         },
         //分享信息
         wxBox(data){
-            let shareTitle = '燕赵财险',
-                shareDesc = '燕赵财险为您提供一份保障、一份健康';
-            this.wx.config({
-            debug: false, 
+          wx.config({
+            debug: false,
             appId: data.appId, // 必填，公众号的唯一标识
             timestamp: data.timeStamp, // 必填，生成签名的时间戳
             nonceStr: data.nonceStr, // 必填，生成签名的随机串
             signature: data.signature,// 必填，签名
-            jsApiList: ['updateAppMessageShareData','updateTimelineShareData'] // 必填，需要使用的JS接口列表
-            });
-            this.wx.ready(function () { 
-                this.wx.updateAppMessageShareData({ 
-                    title: shareTitle, // 分享标题
-                    desc: shareDesc, // 分享描述
-                    link: data.link, // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-                    imgUrl: '../../static/image/company_logo.png', // 分享图标
-                    success: function () {
-                    // 设置成功
-                    }
-                })
-                this.wx.updateTimelineShareData({ 
-                    title: shareTitle, // 分享标题
-                    link: data.link, // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-                    imgUrl: '../../static/image/company_logo.png', // 分享图标
-                    success: function () {
-                    // 设置成功
-                    }
-                })
+            jsApiList: ["onMenuShareTimeline","onMenuShareAppMessage"]
+          });
+             let logoUrl = window.location.protocol + '//' + window.location.host + '/resources/images/share_img.png';
+            let shareWxLink = window.location.href.split('#')[0] + 'static/html/redirect.html?app3Redirect=' + encodeURIComponent(window.location.href);
+            // 微信分享的数据
+            var shareData = {
+              "title": "燕赵财险", // 分享标题
+              "desc": "燕赵财险为您提供一份保障、一份健康",
+              "link": shareWxLink,// 分享链接
+              "imgUrl": logoUrl,// 分享图标
+              success: function (res) {
+              },
+              cancel: function (res) {
+              },
+              fail: function (res) {
+              }
+            };
+            wx.ready(function () {
+              wx.onMenuShareTimeline(shareData);
+              wx.onMenuShareAppMessage(shareData);
             });
         },
         userCheck(){
@@ -261,11 +275,14 @@ export default {
                     method:'post',
                     url:'/insurance/api/user/queryShareSign',
                    headers: {
-                        'uuid': uuid
+                        'uuid': decodeURIComponent(uuid)
                     }
                 })
                 .then((res)=>{
                     if(res.data &&  res.data.code === 1){
+                        this.shopIntro();//加载微店信息
+                        this.userIntro();//用户名片信息
+                        this.wxShare();
                     }
                 })
                 .catch((error)=>{
@@ -275,9 +292,6 @@ export default {
         }
     },
     mounted () {
-        this.shopIntro();//加载微店信息
-        this.userIntro();//用户名片信息
-        this.wxShare();
         this.userCheck();
     }
 }
